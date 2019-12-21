@@ -85,5 +85,20 @@ def version():
     write(__version__)
 
 
+@command()
+def test_replay():
+    import tempfile
+    import os
+    from vimgolf import play
+    with tempfile.TemporaryDirectory() as d:
+        inpath = os.path.join(d, 'input')
+        logpath = os.path.join(d, 'log')
+        with open(inpath, 'w') as f:
+            f.write('some input')
+        with open(logpath, 'w') as f:
+            f.write('ihello')
+        play.replay_single(inpath, logpath)
+
+
 if __name__ == '__main__':
     main()
