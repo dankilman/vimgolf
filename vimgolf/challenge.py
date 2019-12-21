@@ -11,7 +11,7 @@ from vimgolf import (
     GOLF_HOST,
     VIMGOLF_CHALLENGES_PATH,
 )
-from vimgolf.utils import write
+from vimgolf.utils import write, http_request, format_
 
 
 def validate_challenge_id(challenge_id):
@@ -73,6 +73,30 @@ class Challenge:
         self.id = id
         self.compliant = compliant
         self.api_key = api_key
+
+    def load(self):
+        self.load_from_spec(self.spec)
+        return self
+
+    def download(self):
+        url = urllib.parse.urljoin(GOLF_HOST, '/challenges/{}.json'.format(self.id))
+        response = http_request(url)
+        challenge_spec = json.loads(response.body)
+        self.load_from_spec(challenge_spec)
+        self.save(challenge_spec)
+
+    def load_from_spec(self, challenge_spec):
+        in_text = format_(challenge_spec['in']['data'])
+        out_text = format_(challenge_spec['out']['data'])
+        in_type = challenge_spec['in']['type']
+        out_type = challenge_spec['out']['type']
+        # Sanitize and add leading dot
+        in_extension = '.{}'.format(re.sub(r'[^\w-]', '_', in_type))
+        out_extension = '.{}'.format(re.sub(r'[^\w-]', '_', out_type))
+        self.in_text = in_text
+        self.out_text = out_text
+        self.in_extension = in_extension
+        self.out_extension = out_extension
 
     @property
     def dir(self):
