@@ -88,7 +88,9 @@ def version():
 @command()
 @argument('challenge_id')
 @argument('keys')
-def inspect(challenge_id, keys):
+@option('-l', '--literal-lt')
+@option('-g', '--literal-gt')
+def inspect(challenge_id, keys, literal_lt, literal_gt):
     import tempfile
     import os
     from vimgolf import play
@@ -96,7 +98,11 @@ def inspect(challenge_id, keys):
     from vimgolf import keys as _keys
     c = challenge.Challenge(challenge_id)
     c.load_or_download()
-    keycode_reprs = _keys.parse_raw_keycode_reprs(keys)
+    keycode_reprs = _keys.parse_raw_keycode_reprs(
+        raw_keycode_reprs=keys,
+        literal_lt=literal_lt,
+        literal_gt=literal_gt
+    )
     keys_obj = _keys.Keys.from_keycode_reprs(keycode_reprs)
     with tempfile.TemporaryDirectory() as d:
         in_path = os.path.join(d, 'input')
