@@ -117,14 +117,19 @@ def show(challenge_id, tracked=False):
 
 
 def fetch_challenge_spec_and_page(challenge_id):
+    challenge = Challenge(challenge_id)
+    challenge_spec = challenge.spec
     api_url = urllib.parse.urljoin(GOLF_HOST, '/challenges/{}.json'.format(challenge_id))
     page_url = get_challenge_url(challenge_id)
     with concurrent.futures.ThreadPoolExecutor(max_workers=MAX_REQUEST_WORKERS) as executor:
-        results = executor.map(http_request, [api_url, page_url])
-        api_response = next(results)
+        requests = [page_url]
+        if not challenge_spec:
+            requests.append(api_url)
+        results = executor.map(http_request, requests)
         page_response = next(results)
-    challenge_spec = json.loads(api_response.body)
-    challenge = Challenge(challenge_id)
+        if not challenge_spec:
+            api_response = next(results)
+            challenge_spec = json.loads(api_response.body)
     challenge.save(challenge_spec)
     return {
         'challenge': challenge,
