@@ -86,18 +86,29 @@ def version():
 
 
 @command()
-def test_replay():
+@argument('challenge_id')
+@argument('keys')
+def inspect(challenge_id, keys):
     import tempfile
     import os
     from vimgolf import play
+    from vimgolf import challenge
+    from vimgolf import keys as _keys
+    c = challenge.Challenge(challenge_id)
+    if c.spec:
+        c.load()
+    else:
+        c.download()
+    keycode_reprs = _keys.parse_raw_keycode_reprs(keys)
+    keys_obj = _keys.Keys.from_keycode_reprs(keycode_reprs)
     with tempfile.TemporaryDirectory() as d:
-        inpath = os.path.join(d, 'input')
-        logpath = os.path.join(d, 'log')
-        with open(inpath, 'w') as f:
-            f.write('some input')
-        with open(logpath, 'w') as f:
-            f.write('ihello')
-        play.replay_single(inpath, logpath)
+        in_path = os.path.join(d, 'input')
+        log_path = os.path.join(d, 'log')
+        with open(in_path, 'w') as f:
+            f.write(c.in_text)
+        with open(log_path, 'w') as f:
+            f.write(keys_obj.raw_keys)
+        play.replay_single(in_path, log_path)
 
 
 if __name__ == '__main__':
