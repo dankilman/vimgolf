@@ -82,7 +82,6 @@ class Challenge:
         url = urllib.parse.urljoin(GOLF_HOST, '/challenges/{}.json'.format(self.id))
         response = http_request(url)
         challenge_spec = json.loads(response.body)
-        self.load_from_spec(challenge_spec)
         self.save(challenge_spec)
 
     def load_from_spec(self, challenge_spec):
@@ -123,6 +122,7 @@ class Challenge:
         return os.path.join(self.dir, 'metadata.json')
 
     def save(self, spec):
+        self.load_from_spec(spec)
         self._ensure_dir()
         with open(self.in_path, 'w') as f:
             f.write(self.in_text)

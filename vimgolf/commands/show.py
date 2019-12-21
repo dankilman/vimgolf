@@ -33,44 +33,31 @@ from vimgolf.utils import http_request, join_lines, write, bool_to_mark
 def show(challenge_id, tracked=False):
     challenge_id = expand_challenge_id(challenge_id)
     logger.info('show(%s)', challenge_id)
+
+    if not validate_challenge_id(challenge_id):
+        show_challenge_id_error()
+        raise Failure()
+
     try:
-        if not validate_challenge_id(challenge_id):
-            show_challenge_id_error()
-            raise Failure()
-        api_url = urllib.parse.urljoin(GOLF_HOST, '/challenges/{}.json'.format(challenge_id))
-        page_url = get_challenge_url(challenge_id)
-        with concurrent.futures.ThreadPoolExecutor(max_workers=MAX_REQUEST_WORKERS) as executor:
-            results = executor.map(http_request, [api_url, page_url])
-            api_response = next(results)
-            page_response = next(results)
-        challenge_spec = json.loads(api_response.body)
-        start_file = challenge_spec['in']['data']
+        fetched = fetch_challenge_spec_and_page(challenge_id)
+        challenge = fetched['challenge']
+        page_response = fetched['page']
+        page_url = fetched['url']
+
+        data = extract_data_from_page(page_response)
+        name = data['name']
+        description = data['description']
+        leaders = data['leaders']
+
+        challenge.update_metadata(name, description)
+
+        start_file = challenge.in_text
         if not start_file.endswith('\n'):
             start_file += '\n'
-        end_file = challenge_spec['out']['data']
+        end_file = challenge.out_text
         if not end_file.endswith('\n'):
             end_file += '\n'
-        nodes = parse_html(page_response.body)
-        content_element = get_element_by_id(nodes, 'content')
-        content_grid_7_element = get_elements_by_classname(content_element.children, 'grid_7')[0]
-        name_h3 = get_elements_by_tagname(content_grid_7_element.children, 'h3')[0]
-        name = join_lines(get_text([name_h3]).strip())
-        description_p_element = get_elements_by_tagname(content_grid_7_element.children, 'p')[0]
-        description = join_lines(get_text([description_p_element]).strip())
-        content_grid_5_element = get_elements_by_classname(content_element.children, 'grid_5')[0]
-        Leader = namedtuple('Leader', 'username score')
-        leaders = []
-        leaderboard_divs = get_elements_by_tagname(content_grid_5_element.children, 'div')
-        for leaderboard_div in leaderboard_divs:
-            user_h6 = get_elements_by_tagname(leaderboard_div.children, 'h6')[0]
-            username_anchor = get_elements_by_tagname(user_h6.children, 'a')[1]
-            username = get_text([username_anchor]).strip()
-            if username.startswith('@'):
-                username = username[1:]
-            score_div = get_elements_by_tagname(leaderboard_div.children, 'div')[0]
-            score = int(get_text([score_div]).strip())
-            leader = Leader(username=username, score=score)
-            leaders.append(leader)
+
         separator = '-' * 50
         write(separator)
         write('{} ('.format(name), end=None)
@@ -97,9 +84,6 @@ def show(challenge_id, tracked=False):
         write(end_file, end=None)
         write(separator)
 
-        challenge = Challenge(challenge_id)
-        challenge.update_metadata(name, description)
-
         if tracked:
             write('Stats', color='green')
             metadata = challenge.metadata
@@ -123,7 +107,6 @@ def show(challenge_id, tracked=False):
                 answer_rows.append(answer_row)
             if len(answer_rows) > 1:
                 write(AsciiTable(answer_rows).table)
-
     except Failure:
         raise
     except Exception:
@@ -131,3 +114,49 @@ def show(challenge_id, tracked=False):
         write('The challenge retrieval has failed', stream=sys.stderr, color='red')
         write('Please check the challenge ID on vimgolf.com', stream=sys.stderr, color='red')
         raise Failure()
+
+
+def fetch_challenge_spec_and_page(challenge_id):
+    api_url = urllib.parse.urljoin(GOLF_HOST, '/challenges/{}.json'.format(challenge_id))
+    page_url = get_challenge_url(challenge_id)
+    with concurrent.futures.ThreadPoolExecutor(max_workers=MAX_REQUEST_WORKERS) as executor:
+        results = executor.map(http_request, [api_url, page_url])
+        api_response = next(results)
+        page_response = next(results)
+    challenge_spec = json.loads(api_response.body)
+    challenge = Challenge(challenge_id)
+    challenge.save(challenge_spec)
+    return {
+        'challenge': challenge,
+        'page': page_response,
+        'url': page_url
+    }
+
+
+def extract_data_from_page(page_response):
+    nodes = parse_html(page_response.body)
+    content_element = get_element_by_id(nodes, 'content')
+    content_grid_7_element = get_elements_by_classname(content_element.children, 'grid_7')[0]
+    name_h3 = get_elements_by_tagname(content_grid_7_element.children, 'h3')[0]
+    name = join_lines(get_text([name_h3]).strip())
+    description_p_element = get_elements_by_tagname(content_grid_7_element.children, 'p')[0]
+    description = join_lines(get_text([description_p_element]).strip())
+    content_grid_5_element = get_elements_by_classname(content_element.children, 'grid_5')[0]
+    Leader = namedtuple('Leader', 'username score')
+    leaders = []
+    leaderboard_divs = get_elements_by_tagname(content_grid_5_element.children, 'div')
+    for leaderboard_div in leaderboard_divs:
+        user_h6 = get_elements_by_tagname(leaderboard_div.children, 'h6')[0]
+        username_anchor = get_elements_by_tagname(user_h6.children, 'a')[1]
+        username = get_text([username_anchor]).strip()
+        if username.startswith('@'):
+            username = username[1:]
+        score_div = get_elements_by_tagname(leaderboard_div.children, 'div')[0]
+        score = int(get_text([score_div]).strip())
+        leader = Leader(username=username, score=score)
+        leaders.append(leader)
+    return {
+        'name': name,
+        'description': description,
+        'leaders': leaders
+    }
