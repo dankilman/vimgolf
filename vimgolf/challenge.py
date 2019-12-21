@@ -74,6 +74,12 @@ class Challenge:
         self.compliant = compliant
         self.api_key = api_key
 
+    def load_or_download(self):
+        if self.spec:
+            return self.load()
+        else:
+            return self.download()
+
     def load(self):
         self.load_from_spec(self.spec)
         return self
@@ -83,6 +89,7 @@ class Challenge:
         response = http_request(url)
         challenge_spec = json.loads(response.body)
         self.save(challenge_spec)
+        return self
 
     def load_from_spec(self, challenge_spec):
         in_text = format_(challenge_spec['in']['data'])

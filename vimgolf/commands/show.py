@@ -130,7 +130,9 @@ def fetch_challenge_spec_and_page(challenge_id):
         if not challenge_spec:
             api_response = next(results)
             challenge_spec = json.loads(api_response.body)
-    challenge.save(challenge_spec)
+            challenge.save(challenge_spec)
+        else:
+            challenge.load()
     return {
         'challenge': challenge,
         'page': page_response,

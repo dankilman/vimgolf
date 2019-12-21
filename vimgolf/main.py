@@ -95,10 +95,7 @@ def inspect(challenge_id, keys):
     from vimgolf import challenge
     from vimgolf import keys as _keys
     c = challenge.Challenge(challenge_id)
-    if c.spec:
-        c.load()
-    else:
-        c.download()
+    c.load_or_download()
     keycode_reprs = _keys.parse_raw_keycode_reprs(keys)
     keys_obj = _keys.Keys.from_keycode_reprs(keycode_reprs)
     with tempfile.TemporaryDirectory() as d:

@@ -55,15 +55,10 @@ def put(challenge_id):
 
 
 def fetch_and_validate_challenge(challenge_id):
+    write('Downloading vimgolf challenge {}'.format(challenge_id), color='yellow')
     challenge = Challenge(challenge_id)
-    cached_spec = challenge.spec
-    if cached_spec:
-        write('Using locally cached challenge {}'.format(challenge_id), color='yellow')
-        challenge_spec = cached_spec
-    else:
-        write('Downloading vimgolf challenge {}'.format(challenge_id), color='yellow')
-        challenge.download()
-        challenge_spec = challenge.spec
+    challenge.load_or_download()
+    challenge_spec = challenge.spec
     compliant = challenge_spec.get('client') == RUBY_CLIENT_VERSION_COMPLIANCE
     if not compliant:
         message = 'vimgolf=={} is not compliant with vimgolf.com'.format(__version__)
