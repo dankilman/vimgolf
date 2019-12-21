@@ -11,6 +11,26 @@ from vimgolf.utils import write, input_loop, http_request
 from vimgolf.vim import vim
 
 
+def play_args(infile, logfile):
+    return [
+        '-Z',  # restricted mode, utilities not allowed
+        '-n',  # no swap file, memory only editing
+        '--noplugin',  # no plugins
+        '-i', 'NONE',  # don't load .viminfo (e.g., has saved macros, etc.)
+        '+0',  # start on line 0
+        '-u', PLAY_VIMRC_PATH,  # vimgolf .vimrc
+        '-U', 'NONE',  # don't load .gvimrc
+        '-W', logfile,  # keylog file (overwrites existing)
+        infile,
+    ]
+
+
+def replay_args(infile, logfile):
+    result = play_args(infile, logfile)
+    result[-3] = '-s'  # replace -W with -s
+    return result
+
+
 def play(challenge, workspace):
     logger.info('play(...)')
 
@@ -80,19 +100,7 @@ def main_loop(challenge, infile, logfile, outfile):
 
 
 def play_single(infile, logfile, outfile):
-    vimrc = PLAY_VIMRC_PATH
-    play_args = [
-        '-Z',  # restricted mode, utilities not allowed
-        '-n',  # no swap file, memory only editing
-        '--noplugin',  # no plugins
-        '-i', 'NONE',  # don't load .viminfo (e.g., has saved macros, etc.)
-        '+0',  # start on line 0
-        '-u', vimrc,  # vimgolf .vimrc
-        '-U', 'NONE',  # don't load .gvimrc
-        '-W', logfile,  # keylog file (overwrites existing)
-        infile,
-    ]
-    vim(play_args, check=True)
+    vim(play_args(infile, logfile), check=True)
     correct = filecmp.cmp(infile, outfile)
     with open(logfile, 'rb') as _f:
         keys = Keys.from_raw_keys(_f.read())
@@ -102,6 +110,10 @@ def play_single(infile, logfile, outfile):
         'raw_keys': keys.raw_keys,
         'score': keys.score,
     }
+
+
+def replay_single(infile, logfile):
+    vim(replay_args(infile, logfile), check=True)
 
 
 def menu_loop(
