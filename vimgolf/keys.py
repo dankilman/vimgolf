@@ -44,6 +44,35 @@ def to_raw_keys(keycodes):
     return bytes(raw_keys)
 
 
+def parse_raw_keycode_reprs(
+        raw_keycode_reprs: str,
+        literal_lt='',
+        literal_gt=''):
+    if literal_lt and literal_gt:
+        assert literal_lt != literal_gt
+    keycodes = []
+    multi_in_progress = False
+    multi_keys = []
+    for raw_keycode_repr in raw_keycode_reprs:
+        if raw_keycode_repr == '<':
+            multi_in_progress = True
+            multi_keys.append(raw_keycode_repr)
+        elif raw_keycode_repr == '>':
+            multi_keys.append(raw_keycode_repr)
+            multi_in_progress = False
+            keycodes.append(''.join(multi_keys))
+            multi_keys = []
+        elif multi_in_progress:
+            multi_keys.append(raw_keycode_repr)
+        elif literal_lt and raw_keycode_repr == literal_lt:
+            keycodes.append('<')
+        elif literal_gt and raw_keycode_repr == literal_gt:
+            keycodes.append('>')
+        else:
+            keycodes.append(raw_keycode_repr)
+    return keycodes
+
+
 # keystrokes that should not impact score (e.g., window focus)
 IGNORED_KEYSTROKES = {
     b'\xfd\x35',  # (35) KE_IGNORE
