@@ -20,41 +20,22 @@ from vimgolf.html import (
 )
 from vimgolf.utils import http_request, write, maybe_colorize, bool_to_mark
 
+Listing = namedtuple('Listing', 'id name n_entries uploaded score')
+
 
 def list_(page=None, limit=LISTING_LIMIT):
     logger.info('list_(%s, %s)', page, limit)
-    Listing = namedtuple('Listing', 'id name n_entries uploaded score')
     stored_challenges = get_stored_challenges()
     try:
-        listings = []
         url = GOLF_HOST
         if page is not None:
             url = urllib.parse.urljoin(GOLF_HOST, '/?page={}'.format(page))
         response = http_request(url)
-        nodes = parse_html(response.body)
-        challenge_elements = get_elements_by_classname(nodes, 'challenge')
-        for element in challenge_elements:
-            if len(listings) >= limit:
-                break
-            id_, name, n_entries = None, None, None
-            anchor = get_elements_by_tagname(element.children, 'a')[0]
-            href = anchor.get_attr('href')
-            id_ = href.split('/')[-1]
-            name = anchor.children[0].data
-            for child in element.children:
-                if child.node_type == NodeType.TEXT and 'entries' in child.data:
-                    n_entries = int([x for x in child.data.split() if x.isdigit()][0])
-                    break
-            stored_challenge = stored_challenges.get(id_)
-            stored_metadata = stored_challenge.metadata if stored_challenge else {}
-            listing = Listing(
-                id=id_,
-                name=name,
-                n_entries=n_entries,
-                uploaded=stored_metadata.get('uploaded'),
-                score=stored_metadata.get('best_score')
-            )
-            listings.append(listing)
+        listings = extract_listings_from_page(
+            page_html=response.body,
+            limit=limit,
+            stored_challenges=stored_challenges
+        )
     except Failure:
         raise
     except Exception:
@@ -63,7 +44,6 @@ def list_(page=None, limit=LISTING_LIMIT):
         raise Failure()
 
     table_rows = [['#', 'Name', 'Entries', 'ID', 'Submitted', 'Score']]
-
     for idx, listing in enumerate(listings):
         table_row = [
             '{}{} '.format(EXPANSION_PREFIX, idx + 1),
@@ -79,3 +59,32 @@ def list_(page=None, limit=LISTING_LIMIT):
 
     id_lookup = {str(idx+1): listing.id for idx, listing in enumerate(listings)}
     set_id_lookup(id_lookup)
+
+
+def extract_listings_from_page(page_html, limit, stored_challenges):
+    nodes = parse_html(page_html)
+    listings = []
+    challenge_elements = get_elements_by_classname(nodes, 'challenge')
+    for element in challenge_elements:
+        if len(listings) >= limit:
+            break
+        anchor = get_elements_by_tagname(element.children, 'a')[0]
+        href = anchor.get_attr('href')
+        id_ = href.split('/')[-1]
+        name = anchor.children[0].data
+        n_entries = None
+        for child in element.children:
+            if child.node_type == NodeType.TEXT and 'entries' in child.data:
+                n_entries = int([x for x in child.data.split() if x.isdigit()][0])
+                break
+        stored_challenge = stored_challenges.get(id_)
+        stored_metadata = stored_challenge.metadata if stored_challenge else {}
+        listing = Listing(
+            id=id_,
+            name=name,
+            n_entries=n_entries,
+            uploaded=stored_metadata.get('uploaded'),
+            score=stored_metadata.get('best_score')
+        )
+        listings.append(listing)
+    return listings

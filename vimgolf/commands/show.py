@@ -44,7 +44,7 @@ def show(challenge_id, tracked=False):
         page_response = fetched['page']
         page_url = fetched['url']
 
-        data = extract_data_from_page(page_response)
+        data = extract_data_from_page(page_response.body)
         name = data['name']
         description = data['description']
         leaders = data['leaders']
@@ -138,8 +138,8 @@ def fetch_challenge_spec_and_page(challenge_id):
     }
 
 
-def extract_data_from_page(page_response):
-    nodes = parse_html(page_response.body)
+def extract_data_from_page(page_html):
+    nodes = parse_html(page_html)
     content_element = get_element_by_id(nodes, 'content')
     content_grid_7_element = get_elements_by_classname(content_element.children, 'grid_7')[0]
     name_h3 = get_elements_by_tagname(content_grid_7_element.children, 'h3')[0]
