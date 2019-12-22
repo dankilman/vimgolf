@@ -19,13 +19,14 @@ def inspect(challenge_id, keys, literal_lt, literal_gt):
         literal_lt=literal_lt,
         literal_gt=literal_gt,
     )
-    keycode_reps = full_processed_keys.keycode_reprs
+    keycode_reprs = full_processed_keys.keycode_reprs
     sequences = [
-        (i, Keys.from_keycode_reprs(keycode_reps[:i]))
-        for i in range(len(keycode_reps) + 1)
+        Keys.from_keycode_reprs(keycode_reprs[:i])
+        for i in range(len(keycode_reprs) + 1)
     ]
 
     with tempfile.TemporaryDirectory() as d:
+
         def dst_path(index):
             index = str(index).zfill(3)
             return os.path.join(d, '{}{}{}'.format(name, index, ext))
@@ -34,7 +35,11 @@ def inspect(challenge_id, keys, literal_lt, literal_gt):
             index = str(index).zfill(3)
             return os.path.join(d, 'log{}'.format(index))
 
-        for i, processed_keys in sequences:
+        def in_path(index):
+            index = str(index).zfill(3)
+            return os.path.join(d, 'inspect-{}{}{}'.format(name, index, ext))
+
+        for i, processed_keys in enumerate(sequences):
             shutil.copy(src_in_path, dst_path(i))
             with open(log_path(i), 'wb') as f:
                 f.write(processed_keys.raw_keys + REPLAY_QUIT_RAW_KEYS)
@@ -42,15 +47,23 @@ def inspect(challenge_id, keys, literal_lt, literal_gt):
 
         first_sequence = 0
         last_sequence = len(sequences) - 1
-        interesting_sequences = [first_sequence]
+        in_sequences = [first_sequence]
         for i in range(len(sequences) - 1):
             different = not filecmp.cmp(dst_path(i), dst_path(i + 1))
             if different:
-                interesting_sequences.append(i + 1)
-        if last_sequence not in interesting_sequences:
-            interesting_sequences.append(last_sequence)
+                in_sequences.append(i + 1)
+        if last_sequence not in in_sequences:
+            in_sequences.append(last_sequence)
 
-        print(interesting_sequences)
+        for i, in_sequence_index in enumerate(in_sequences):
+            with open(in_path(i), 'wb') as in_f:
+                reprs = ''.join(sequences[in_sequence_index].keycode_reprs)
+                header = '{}\n----------------------\n'.format(reprs)
+                in_f.write(bytes(header, 'utf-8'))
+                with open(dst_path(in_sequence_index), 'rb') as dst_f:
+                    in_f.write(dst_f.read())
+
+        print(in_sequences)
         print(d)
         import time
         time.sleep(600)
