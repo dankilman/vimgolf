@@ -33,6 +33,7 @@ MAX_REQUEST_WORKERS = 6
 
 # Various paths
 PLAY_VIMRC_PATH = os.path.join(os.path.dirname(__file__), 'vimgolf.vimrc')
+INSPECT_VIM_PATH = os.path.join(os.path.dirname(__file__), 'vimgolf-inspect.vim')
 CONFIG_HOME = os.environ.get('XDG_CONFIG_HOME', os.path.join(USER_HOME, '.config'))
 VIMGOLF_CONFIG_PATH = os.path.join(CONFIG_HOME, 'vimgolf')
 VIMGOLF_API_KEY_PATH = os.path.join(VIMGOLF_CONFIG_PATH, 'api_key')
