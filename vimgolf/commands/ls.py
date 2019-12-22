@@ -23,7 +23,7 @@ from vimgolf.utils import http_request, write, maybe_colorize, bool_to_mark
 Listing = namedtuple('Listing', 'id name n_entries uploaded score')
 
 
-def list_(page=None, limit=LISTING_LIMIT):
+def ls(page=None, limit=LISTING_LIMIT):
     logger.info('list_(%s, %s)', page, limit)
     stored_challenges = get_stored_challenges()
     try:
@@ -88,3 +88,18 @@ def extract_listings_from_page(page_html, limit, stored_challenges):
         )
         listings.append(listing)
     return listings
+
+
+def parse_list_spec(raw_spec):
+    page_and_limit = raw_spec or ''
+    spec = {}
+    parts = page_and_limit.split(':')
+    try:
+        if len(parts) > 0 and parts[0]:
+            spec['page'] = int(parts[0])
+        if len(parts) > 1:
+            spec['limit'] = int(parts[1])
+    except Exception:
+        pass
+    return spec
+
