@@ -1,6 +1,5 @@
 import os
 import re
-import sys
 
 from vimgolf import VIMGOLF_API_KEY_PATH
 from vimgolf.utils import write
@@ -23,10 +22,10 @@ def set_api_key(api_key):
 
 
 def show_api_key_help():
-    write('An API key can be obtained from vimgolf.com', color='yellow')
-    write('Please run "vimgolf config API_KEY" to set your API key', color='yellow')
+    write('An API key can be obtained from vimgolf.com', fg='yellow')
+    write('Please run "vimgolf config API_KEY" to set your API key', fg='yellow')
 
 
 def show_api_key_error():
-    write('Invalid API key', stream=sys.stderr, color='red')
-    write('Please check your API key on vimgolf.com', stream=sys.stderr, color='red')
+    write('Invalid API key', err=True, fg='red')
+    write('Please check your API key on vimgolf.com', err=True, fg='red')

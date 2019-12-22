@@ -1,7 +1,6 @@
 import filecmp
 import json
 import os
-import sys
 import urllib.parse
 
 from vimgolf import logger, PLAY_VIMRC_PATH, GOLF_HOST
@@ -44,9 +43,9 @@ def play(challenge, workspace):
     with open(outfile, 'w') as f:
         f.write(challenge.out_text)
 
-    write('Launching vimgolf session', color='yellow')
+    write('Launching vimgolf session', fg='yellow')
     main_loop(challenge, infile, logfile, outfile)
-    write('Thanks for playing!', color='green')
+    write('Thanks for playing!', fg='green')
 
 
 def main_loop(challenge, infile, logfile, outfile):
@@ -65,18 +64,18 @@ def main_loop(challenge, infile, logfile, outfile):
         correct = play_result['correct']
         score = play_result['score']
 
-        write('Here are your keystrokes:', color='green')
+        write('Here are your keystrokes:', fg='green')
         for keycode_repr in keycode_reprs:
             color = 'magenta' if len(keycode_repr) > 1 else None
-            write(keycode_repr, color=color, end=None)
-        write('')
+            write(keycode_repr, fg=color, nl=False)
+        write()
 
         if correct:
-            write('Success! Your output matches.', color='green')
-            write('Your score:', color='green')
+            write('Success! Your output matches.', fg='green')
+            write('Your score:', fg='green')
         else:
-            write('Uh oh, looks like your entry does not match the desired output.', color='red')
-            write('Your score for this failed attempt:', color='red')
+            write('Uh oh, looks like your entry does not match the desired output.', fg='red')
+            write('Your score for this failed attempt:', fg='red')
         write(score)
 
         menu_loop_result = menu_loop(
@@ -136,30 +135,30 @@ def menu_loop(
         menu.append(('q', 'Quit vimgolf'))
         valid_codes = [x[0] for x in menu]
         for opt in menu:
-            write('[{}] {}'.format(*opt), color='yellow')
+            write('[{}] {}'.format(*opt), fg='yellow')
         selection = input_loop('Choice> ')
         if selection not in valid_codes:
-            write('Invalid selection: {}'.format(selection), stream=sys.stderr, color='red')
+            write('Invalid selection: {}'.format(selection), err=True, fg='red')
         elif selection == 'd':
             diff_args = ['-d', '-n', infile, outfile]
             vim(diff_args)
         elif selection == 'w':
             success = upload_result(challenge.id, challenge.api_key, raw_keys)
             if success:
-                write('Uploaded entry!', color='green')
+                write('Uploaded entry!', fg='green')
                 leaderboard_url = get_challenge_url(challenge.id)
-                write('View the leaderboard: {}'.format(leaderboard_url), color='green')
+                write('View the leaderboard: {}'.format(leaderboard_url), fg='green')
                 uploaded = True
                 upload_eligible = False
             else:
-                write('The entry upload has failed', stream=sys.stderr, color='red')
+                write('The entry upload has failed', err=True, fg='red')
                 message = 'Please check your API key on vimgolf.com'
-                write(message, stream=sys.stderr, color='red')
+                write(message, err=True, fg='red')
         else:
             break
     should_quit = selection == 'q'
     if not should_quit:
-        write('Retrying vimgolf challenge', color='yellow')
+        write('Retrying vimgolf challenge', fg='yellow')
     return {
         'should_quit': should_quit,
         'uploaded': uploaded,

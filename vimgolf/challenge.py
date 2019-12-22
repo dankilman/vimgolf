@@ -2,7 +2,6 @@ import datetime
 import json
 import os
 import re
-import sys
 import urllib.parse
 
 from vimgolf import (
@@ -19,8 +18,8 @@ def validate_challenge_id(challenge_id):
 
 
 def show_challenge_id_error():
-    write('Invalid challenge ID', stream=sys.stderr, color='red')
-    write('Please check the ID on vimgolf.com', stream=sys.stderr, color='red')
+    write('Invalid challenge ID', err=True, fg='red')
+    write('Please check the ID on vimgolf.com', err=True, fg='red')
 
 
 def get_id_lookup():

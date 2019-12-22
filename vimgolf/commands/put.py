@@ -1,4 +1,3 @@
-import sys
 import tempfile
 
 from vimgolf import (
@@ -28,8 +27,8 @@ def put(challenge_id):
 
     api_key = get_api_key()
     if not validate_api_key(api_key):
-        write('An API key has not been configured', color='red')
-        write('Uploading to vimgolf.com is disabled', color='red')
+        write('An API key has not been configured', fg='red')
+        write('Uploading to vimgolf.com is disabled', fg='red')
         show_api_key_help()
         if not confirm('Play without uploads?'):
             raise Failure()
@@ -40,8 +39,8 @@ def put(challenge_id):
         raise
     except Exception:
         logger.exception('challenge retrieval failed')
-        write('The challenge retrieval has failed', stream=sys.stderr, color='red')
-        write('Please check the challenge ID on vimgolf.com', stream=sys.stderr, color='red')
+        write('The challenge retrieval has failed', err=True, fg='red')
+        write('Please check the challenge ID on vimgolf.com', err=True, fg='red')
         raise Failure()
 
     challenge = Challenge(
@@ -55,16 +54,16 @@ def put(challenge_id):
 
 
 def fetch_and_validate_challenge(challenge_id):
-    write('Downloading vimgolf challenge {}'.format(challenge_id), color='yellow')
+    write('Downloading vimgolf challenge {}'.format(challenge_id), fg='yellow')
     challenge = Challenge(challenge_id)
     challenge.load_or_download()
     challenge_spec = challenge.spec
     compliant = challenge_spec.get('client') == RUBY_CLIENT_VERSION_COMPLIANCE
     if not compliant:
         message = 'vimgolf=={} is not compliant with vimgolf.com'.format(__version__)
-        write(message, stream=sys.stderr, color='red')
-        write('Uploading to vimgolf.com is disabled', stream=sys.stderr, color='red')
-        write('vimgolf may not function properly', color='red')
+        write(message, err=True, fg='red')
+        write('Uploading to vimgolf.com is disabled', err=True, fg='red')
+        write('vimgolf may not function properly', fg='red')
         try:
             from distutils.version import StrictVersion
             client_compliance_version = StrictVersion(RUBY_CLIENT_VERSION_COMPLIANCE)
@@ -72,7 +71,7 @@ def fetch_and_validate_challenge(challenge_id):
             action = 'upgrade' if api_version > client_compliance_version else 'downgrade'
         except Exception:
             action = 'update'
-        write('Please {} vimgolf to a compliant version'.format(action), color='yellow')
+        write('Please {} vimgolf to a compliant version'.format(action), fg='yellow')
         if not confirm('Try to play without uploads?'):
             raise Failure()
     return compliant

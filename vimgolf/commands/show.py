@@ -1,6 +1,5 @@
 import concurrent.futures
 import json
-import sys
 import urllib.parse
 from collections import namedtuple
 
@@ -60,32 +59,32 @@ def show(challenge_id, tracked=False):
 
         separator = '-' * 50
         write(separator)
-        write('{} ('.format(name), end=None)
-        write(challenge_id, color='yellow', end=None)
+        write('{} ('.format(name), nl=False)
+        write(challenge_id, fg='yellow', nl=False)
         write(')')
         write(separator)
         write(page_url)
         write(separator)
-        write('Leaderboard', color='green')
+        write('Leaderboard', fg='green')
         if leaders:
             for leader in leaders[:LEADER_LIMIT]:
                 write('{} {}'.format(leader.username.ljust(15), leader.score))
             if len(leaders) > LEADER_LIMIT:
                 write('...')
         else:
-            write('no entries yet', color='yellow')
+            write('no entries yet', fg='yellow')
         write(separator)
         write(description)
         write(separator)
-        write('Start File', color='green')
-        write(start_file, end=None)
+        write('Start File', fg='green')
+        write(start_file, nl=False)
         write(separator)
-        write('End File', color='green')
-        write(end_file, end=None)
+        write('End File', fg='green')
+        write(end_file, nl=False)
         write(separator)
 
         if tracked:
-            write('Stats', color='green')
+            write('Stats', fg='green')
             metadata = challenge.metadata
             write('Uploaded: {}'.format(metadata['uploaded']))
             write('Correct Solutions: {}'.format(metadata['correct']))
@@ -111,8 +110,8 @@ def show(challenge_id, tracked=False):
         raise
     except Exception:
         logger.exception('challenge retrieval failed')
-        write('The challenge retrieval has failed', stream=sys.stderr, color='red')
-        write('Please check the challenge ID on vimgolf.com', stream=sys.stderr, color='red')
+        write('The challenge retrieval has failed', err=True, fg='red')
+        write('Please check the challenge ID on vimgolf.com', err=True, fg='red')
         raise Failure()
 
 

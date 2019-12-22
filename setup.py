@@ -25,7 +25,8 @@ setup(
     description='A vimgolf client written in Python',
     install_requires=[
         'click>=7,<8',
-        'terminaltables>=3,<4'
+        'terminaltables>=3,<4',
+        'colorama',
     ],
     entry_points={
         'console_scripts': ['vimgolf=vimgolf.main:main'],

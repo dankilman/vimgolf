@@ -1,4 +1,3 @@
-import sys
 import urllib.parse
 from collections import namedtuple
 
@@ -18,7 +17,7 @@ from vimgolf.html import (
     get_elements_by_tagname,
     NodeType,
 )
-from vimgolf.utils import http_request, write, maybe_colorize, bool_to_mark
+from vimgolf.utils import http_request, write, style, bool_to_mark
 
 Listing = namedtuple('Listing', 'id name n_entries uploaded score')
 
@@ -40,7 +39,7 @@ def ls(page=None, limit=LISTING_LIMIT):
         raise
     except Exception:
         logger.exception('challenge retrieval failed')
-        write('The challenge list retrieval has failed', stream=sys.stderr, color='red')
+        write('The challenge list retrieval has failed', err=True, fg='red')
         raise Failure()
 
     table_rows = [['#', 'Name', 'Entries', 'ID', 'Submitted', 'Score']]
@@ -49,7 +48,7 @@ def ls(page=None, limit=LISTING_LIMIT):
             '{}{} '.format(EXPANSION_PREFIX, idx + 1),
             listing.name,
             listing.n_entries,
-            maybe_colorize(listing.id, sys.stdout, 'yellow'),
+            style(listing.id, fg='yellow'),
             bool_to_mark(listing.uploaded),
             listing.score if listing.score and listing.score > 0 else '-',
         ]

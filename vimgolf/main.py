@@ -51,7 +51,8 @@ def put(challenge_id):
     commands.put(challenge_id)
 
 
-@argument('spec', callback=lambda _, __, value: parse_list_spec(value))
+@command()
+@argument('spec', default='', callback=lambda _, __, value: parse_list_spec(value))
 def ls(spec):
     """list vimgolf.com challenges (spec syntax: [PAGE][:LIMIT])"""
     commands.ls(**spec)
