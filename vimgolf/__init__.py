@@ -2,26 +2,10 @@ import datetime
 import glob
 import logging
 import os
-import sys
 
 version_txt = os.path.join(os.path.dirname(__file__), 'version.txt')
 with open(version_txt, 'r') as vf:
     __version__ = vf.read().strip()
-
-# Enable ANSI terminal colors on Windows
-if sys.platform == 'win32':
-    import ctypes
-    from ctypes import wintypes
-    kernel32 = ctypes.windll.kernel32
-    STD_OUTPUT_HANDLE = -11                   # https://docs.microsoft.com/en-us/windows/console/getstdhandle
-    STD_ERROR_HANDLE = -12                    # ditto
-    ENABLE_VIRTUAL_TERMINAL_PROCESSING = 0x4  # https://docs.microsoft.com/en-us/windows/console/getconsolemode
-    for std_device in [STD_OUTPUT_HANDLE, STD_ERROR_HANDLE]:
-        handle = kernel32.GetStdHandle(wintypes.DWORD(std_device))
-        old_console_mode = wintypes.DWORD()
-        kernel32.GetConsoleMode(handle, ctypes.byref(old_console_mode))
-        new_console_mode = wintypes.DWORD(ENABLE_VIRTUAL_TERMINAL_PROCESSING | old_console_mode.value)
-        kernel32.SetConsoleMode(handle, new_console_mode)
 
 GOLF_HOST = os.environ.get('GOLF_HOST', 'https://www.vimgolf.com')
 GOLF_VIM = os.environ.get('GOLF_VIM', 'vim')
