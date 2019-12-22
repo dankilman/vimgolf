@@ -58,11 +58,11 @@ def inspect(challenge_id, keys, literal_lt, literal_gt):
         for i, in_sequence_index in enumerate(in_sequences):
             with open(in_path(i), 'wb') as in_f:
                 if in_sequence_index == first_sequence:
-                    reprs = '(INPUT)'
+                    reprs = '(IN)'
                 else:
                     reprs = ''.join(sequences[in_sequence_index].keycode_reprs)
                     if in_sequence_index == last_sequence:
-                        reprs = '{} (OUTPUT)'.format(reprs)
+                        reprs = '{} (OUT)'.format(reprs)
                 header = '{}\n----------------------\n'.format(reprs)
                 in_f.write(bytes(header, 'utf-8'))
                 with open(dst_path(in_sequence_index), 'rb') as dst_f:
@@ -70,4 +70,4 @@ def inspect(challenge_id, keys, literal_lt, literal_gt):
 
         print(d)
         import time
-        time.sleep(600)
+        time.sleep(3600)
