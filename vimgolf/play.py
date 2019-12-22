@@ -3,14 +3,14 @@ import json
 import os
 import urllib.parse
 
-from vimgolf import logger, PLAY_VIMRC_PATH, GOLF_HOST
+from vimgolf import logger, PLAY_VIMRC_PATH, GOLF_HOST, INSPECT_VIM_PATH
 from vimgolf.challenge import get_challenge_url
 from vimgolf.keys import Keys
 from vimgolf.utils import write, input_loop, http_request
 from vimgolf.vim import vim
 
 
-def play_args(infile, logfile):
+def base_args():
     return [
         '-Z',  # restricted mode, utilities not allowed
         '-n',  # no swap file, memory only editing
@@ -19,15 +19,28 @@ def play_args(infile, logfile):
         '+0',  # start on line 0
         '-u', PLAY_VIMRC_PATH,  # vimgolf .vimrc
         '-U', 'NONE',  # don't load .gvimrc
+    ]
+
+
+def play_args(infile, logfile):
+    return base_args() + [
         '-W', logfile,  # keylog file (overwrites existing)
         infile,
     ]
 
 
 def replay_args(infile, logfile):
-    result = play_args(infile, logfile)
-    result[-3] = '-s'  # replace -W with -s
-    return result
+    return base_args() + [
+        '-s', logfile,  # source keylog file
+        infile,
+    ]
+
+
+def inspect_args(inspect_pairs_path):
+    return base_args() + [
+        '-S', INSPECT_VIM_PATH,
+        '-S', inspect_pairs_path,
+    ]
 
 
 def play(challenge, workspace):
@@ -111,8 +124,12 @@ def play_single(infile, logfile, outfile):
     }
 
 
-def replay_single(infile, logfile):
+def replay(infile, logfile):
     vim(replay_args(infile, logfile), check=True)
+
+
+def inspect(inspect_pairs_path):
+    vim(inspect_args(inspect_pairs_path), check=True)
 
 
 def menu_loop(

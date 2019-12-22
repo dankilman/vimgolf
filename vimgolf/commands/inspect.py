@@ -43,7 +43,7 @@ def inspect(challenge_id, keys, literal_lt, literal_gt):
             shutil.copy(src_in_path, dst_path(i))
             with open(log_path(i), 'wb') as f:
                 f.write(processed_keys.raw_keys + REPLAY_QUIT_RAW_KEYS)
-            play.replay_single(dst_path(i), log_path(i))
+            play.replay(dst_path(i), log_path(i))
 
         first_sequence = 0
         last_sequence = len(sequences) - 1
@@ -68,6 +68,16 @@ def inspect(challenge_id, keys, literal_lt, literal_gt):
                 with open(dst_path(in_sequence_index), 'rb') as dst_f:
                     in_f.write(dst_f.read())
 
-        print(d)
-        import time
-        time.sleep(3600)
+        inspect_pairs = []
+        for i in range(len(in_sequences) - 1):
+            inspect_pairs.append([in_path(i), in_path(i+1)])
+        inspect_pairs.append([in_path(0), in_path(len(in_sequences) - 1)])
+
+        inspect_pairs_path = os.path.join(d, 'inspect-pairs.vim')
+        with open(inspect_pairs_path, 'w') as f:
+            f.write("let g:inspectPairs = [")
+            for first, second in inspect_pairs:
+                f.write("['{}','{}'],".format(first, second))
+            f.write("]")
+
+        play.inspect(inspect_pairs_path)

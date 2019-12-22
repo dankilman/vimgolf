@@ -1,11 +1,6 @@
 nnoremap <C-J> :<C-U>call InspectCompareNext()<CR>
 nnoremap <C-K> :<C-U>call InspectComparePrevious()<CR>
             
-let g:inspectPairs = [
-\    ['in0.txt', 'in1.txt'],
-\    ['in1.txt', 'in2.txt'],
-\    ['in2.txt', 'in3.txt'],
-\]
 let g:currentInspectPair = 0
 
 function! InspectCompareNext()
@@ -27,15 +22,12 @@ function! InspectComparePrevious()
 endfunction
 
 function! InspectCompare()
-    let currentPair = g:inspectPairs[g:currentInspectPair]
-    let topItem = currentPair[0]
-    let buttomItem = currentPair[1]
-    echo topItem
-    echo buttomItem
-    return
-    windo diffoff
-    only
-    edit topItem
-    belowright split buttomItem
-    windo diffthis
+    let l:currentPair = g:inspectPairs[g:currentInspectPair]
+    let l:topItem = currentPair[0]
+    let l:bottomItem = currentPair[1]
+    execute "windo diffoff"
+    execute "only"
+    execute "edit " . l:topItem
+    execute "belowright split " . l:bottomItem
+    execute "windo diffthis"
 endfunction
