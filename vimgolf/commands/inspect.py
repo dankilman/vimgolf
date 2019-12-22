@@ -1,6 +1,7 @@
+import os
 import shutil
 import tempfile
-import os
+
 from vimgolf import play
 from vimgolf.challenge import Challenge
 from vimgolf.keys import Keys
