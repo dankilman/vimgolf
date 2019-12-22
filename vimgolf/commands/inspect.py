@@ -4,7 +4,7 @@ import tempfile
 
 from vimgolf import play
 from vimgolf.challenge import Challenge
-from vimgolf.keys import Keys
+from vimgolf.keys import Keys, REPLAY_QUIT_RAW_KEYS
 
 
 def inspect(challenge_id, keys, literal_lt, literal_gt):
@@ -31,7 +31,7 @@ def inspect(challenge_id, keys, literal_lt, literal_gt):
             shutil.copy(src_in_path, dst_in_path)
             log_path = os.path.join(d, 'log{}'.format(i))
             with open(log_path, 'wb') as f:
-                f.write(processed_keys.raw_keys)
+                f.write(processed_keys.raw_keys + REPLAY_QUIT_RAW_KEYS)
             play.replay_single(dst_in_path, log_path)
         print(d)
         import time
