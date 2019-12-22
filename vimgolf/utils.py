@@ -72,15 +72,7 @@ def input_loop(prompt, strip=True, required=True):
 
 
 def confirm(prompt):
-    while True:
-        selection = input_loop('{} [y/n] '.format(prompt)).lower()
-        if selection in ('y', 'yes'):
-            break
-        elif selection in ('n', 'no'):
-            return False
-        else:
-            write('Invalid selection: {}'.format(selection), fg='red')
-    return True
+    return click.confirm(prompt)
 
 
 def find_executable_unix(executable):
@@ -126,4 +118,5 @@ def find_executable(executable):
         return find_executable_unix(executable)
 
 
-bool_to_mark = lambda m: '✅' if m else '❌'
+def bool_to_mark(m):
+    return '✅' if m else '❌'
