@@ -31,53 +31,53 @@ LOG_LIMIT = 10
 # As of 2018, most browsers use a max of six connections per hostname.
 MAX_REQUEST_WORKERS = 6
 
+# Various paths
 PLAY_VIMRC_PATH = os.path.join(os.path.dirname(__file__), 'vimgolf.vimrc')
-
 CONFIG_HOME = os.environ.get('XDG_CONFIG_HOME', os.path.join(USER_HOME, '.config'))
 VIMGOLF_CONFIG_PATH = os.path.join(CONFIG_HOME, 'vimgolf')
-os.makedirs(VIMGOLF_CONFIG_PATH, exist_ok=True)
 VIMGOLF_API_KEY_PATH = os.path.join(VIMGOLF_CONFIG_PATH, 'api_key')
-
 DATA_HOME = os.environ.get('XDG_DATA_HOME', os.path.join(USER_HOME, '.local', 'share'))
 VIMGOLF_DATA_PATH = os.path.join(DATA_HOME, 'vimgolf')
-os.makedirs(VIMGOLF_DATA_PATH, exist_ok=True)
 VIMGOLF_ID_LOOKUP_PATH = os.path.join(VIMGOLF_DATA_PATH, 'id_lookup.json')
-
 VIMGOLF_CHALLENGES_PATH = os.path.join(VIMGOLF_DATA_PATH, 'challenges')
-os.makedirs(VIMGOLF_CHALLENGES_PATH, exist_ok=True)
-
 CACHE_HOME = os.environ.get('XDG_CACHE_HOME', os.path.join(USER_HOME, '.cache'))
 VIMGOLF_CACHE_PATH = os.path.join(CACHE_HOME, 'vimgolf')
-os.makedirs(VIMGOLF_CACHE_PATH, exist_ok=True)
-
 VIMGOLF_LOG_DIR_PATH = os.path.join(VIMGOLF_CACHE_PATH, 'log')
-os.makedirs(VIMGOLF_LOG_DIR_PATH, exist_ok=True)
 VIMGOLF_LOG_FILENAME = 'vimgolf-{}-{}.log'.format(TIMESTAMP, os.getpid())
 VIMGOLF_LOG_PATH = os.path.join(VIMGOLF_LOG_DIR_PATH, VIMGOLF_LOG_FILENAME)
 
 logger = logging.getLogger('vimgolf')
 
-# Initialize logger
-logger.setLevel(logging.DEBUG)
-handler = logging.FileHandler(VIMGOLF_LOG_PATH, mode='w')
-handler.setLevel(logging.DEBUG)
-formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
-handler.setFormatter(formatter)
-logger.addHandler(handler)
-logger.info('vimgolf started')
 
-# Clean stale logs
-logger.info('cleaning stale logs')
-existing_logs_glob = os.path.join(VIMGOLF_LOG_DIR_PATH, 'vimgolf-*-*.log')
-existing_logs = glob.glob(existing_logs_glob)
-log_sort_key = lambda x: float(os.path.basename(x).split('-')[1])
-stale_existing_logs = sorted(existing_logs, key=log_sort_key)[:-LOG_LIMIT]
-for log in stale_existing_logs:
-    logger.info('deleting stale log: {}'.format(log))
-    try:
-        os.remove(log)
-    except Exception:
-        logger.exception('error deleting stale log: {}'.format(log))
+def setup_directories():
+    os.makedirs(VIMGOLF_CONFIG_PATH, exist_ok=True)
+    os.makedirs(VIMGOLF_DATA_PATH, exist_ok=True)
+    os.makedirs(VIMGOLF_CHALLENGES_PATH, exist_ok=True)
+    os.makedirs(VIMGOLF_CACHE_PATH, exist_ok=True)
+    os.makedirs(VIMGOLF_LOG_DIR_PATH, exist_ok=True)
+
+
+def init_logger():
+    logger.setLevel(logging.DEBUG)
+    handler = logging.FileHandler(VIMGOLF_LOG_PATH, mode='w')
+    handler.setLevel(logging.DEBUG)
+    formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
+    handler.setFormatter(formatter)
+    logger.addHandler(handler)
+
+
+def clean_stale_logs():
+    logger.info('cleaning stale logs')
+    existing_logs_glob = os.path.join(VIMGOLF_LOG_DIR_PATH, 'vimgolf-*-*.log')
+    existing_logs = glob.glob(existing_logs_glob)
+    log_sort_key = lambda x: float(os.path.basename(x).split('-')[1])
+    stale_existing_logs = sorted(existing_logs, key=log_sort_key)[:-LOG_LIMIT]
+    for log in stale_existing_logs:
+        logger.info('deleting stale log: {}'.format(log))
+        try:
+            os.remove(log)
+        except Exception:
+            logger.exception('error deleting stale log: {}'.format(log))
 
 
 class Failure(Exception):

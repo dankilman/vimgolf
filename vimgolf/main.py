@@ -7,13 +7,20 @@ from vimgolf import (
     commands,
     Failure,
     __version__,
+    init_logger,
+    clean_stale_logs,
+    logger,
+    setup_directories,
 )
 from vimgolf.utils import write
 
 
 @click.group()
 def main():
-    pass
+    setup_directories()
+    init_logger()
+    clean_stale_logs()
+    logger.info('vimgolf started')
 
 
 argument = click.argument
