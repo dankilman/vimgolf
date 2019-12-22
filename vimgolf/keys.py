@@ -297,3 +297,11 @@ class Keys:
             keycodes=keycodes,
             keycode_reprs=keycode_reprs
         )
+
+    @classmethod
+    def from_raw_keycode_reprs(cls, raw_keycode_reprs, literal_lt, literal_gt):
+        return cls.from_keycode_reprs(parse_raw_keycode_reprs(
+            raw_keycode_reprs=raw_keycode_reprs,
+            literal_lt=literal_lt,
+            literal_gt=literal_gt,
+        ))

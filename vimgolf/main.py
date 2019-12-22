@@ -91,27 +91,8 @@ def version():
 @option('-l', '--literal-lt')
 @option('-g', '--literal-gt')
 def inspect(challenge_id, keys, literal_lt, literal_gt):
-    import tempfile
-    import os
-    from vimgolf import play
-    from vimgolf import challenge
-    from vimgolf import keys as _keys
-    c = challenge.Challenge(challenge_id)
-    c.load_or_download()
-    keycode_reprs = _keys.parse_raw_keycode_reprs(
-        raw_keycode_reprs=keys,
-        literal_lt=literal_lt,
-        literal_gt=literal_gt
-    )
-    keys_obj = _keys.Keys.from_keycode_reprs(keycode_reprs)
-    with tempfile.TemporaryDirectory() as d:
-        in_path = os.path.join(d, 'input')
-        log_path = os.path.join(d, 'log')
-        with open(in_path, 'w') as f:
-            f.write(c.in_text)
-        with open(log_path, 'w') as f:
-            f.write(keys_obj.raw_keys.decode('utf-8'))
-        play.replay_single(in_path, log_path)
+    """inspect behaviour of a key sequence applied to challenge"""
+    commands.inspect(challenge_id, keys, literal_lt, literal_gt)
 
 
 if __name__ == '__main__':

@@ -60,3 +60,12 @@ def test_parse_raw_keycode_reprs_literal_lt_and_gt():
 def test_assert_literal_lt_and_gt_not_the_same():
     with pytest.raises(AssertionError):
         parse_raw_keycode_reprs('', literal_lt='1', literal_gt='1')
+
+
+def test_keys_from_raw_keycode_reprs():
+    keys = Keys.from_raw_keycode_reprs(
+        raw_keycode_reprs='{ZZ}',
+        literal_lt='{',
+        literal_gt='}'
+    )
+    assert keys.keycode_reprs == ['<', 'Z', 'Z', '>']
