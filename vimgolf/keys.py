@@ -264,7 +264,7 @@ def get_keycode(keycode_repr):
     return _KEYCODE_LOOKUP[keycode_repr]
 
 
-_REPLAY_QUIT_KEYCODE_REPRS = '<Esc>:<C-U>wqall<CR>'
+_REPLAY_QUIT_KEYCODE_REPRS = '<Esc><Esc><Esc>:<C-U>wqall<CR>'
 REPLAY_QUIT_RAW_KEYS = to_raw_keys([
     get_keycode(kr) for kr in
     parse_raw_keycode_reprs(_REPLAY_QUIT_KEYCODE_REPRS)
