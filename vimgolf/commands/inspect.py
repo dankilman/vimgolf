@@ -1,3 +1,4 @@
+import filecmp
 import os
 import shutil
 import tempfile
@@ -25,14 +26,31 @@ def inspect(challenge_id, keys, literal_lt, literal_gt):
     ]
 
     with tempfile.TemporaryDirectory() as d:
+        def dst_path(index):
+            index = str(index).zfill(3)
+            return os.path.join(d, '{}{}{}'.format(name, index, ext))
+
+        def log_path(index):
+            index = str(index).zfill(3)
+            return os.path.join(d, 'log{}'.format(index))
+
         for i, processed_keys in sequences:
-            i = str(i).zfill(3)
-            dst_in_path = os.path.join(d, '{}{}{}'.format(name, i, ext))
-            shutil.copy(src_in_path, dst_in_path)
-            log_path = os.path.join(d, 'log{}'.format(i))
-            with open(log_path, 'wb') as f:
+            shutil.copy(src_in_path, dst_path(i))
+            with open(log_path(i), 'wb') as f:
                 f.write(processed_keys.raw_keys + REPLAY_QUIT_RAW_KEYS)
-            play.replay_single(dst_in_path, log_path)
+            play.replay_single(dst_path(i), log_path(i))
+
+        first_sequence = 0
+        last_sequence = len(sequences) - 1
+        interesting_sequences = [first_sequence]
+        for i in range(len(sequences) - 1):
+            different = not filecmp.cmp(dst_path(i), dst_path(i + 1))
+            if different:
+                interesting_sequences.append(i + 1)
+        if last_sequence not in interesting_sequences:
+            interesting_sequences.append(last_sequence)
+
+        print(interesting_sequences)
         print(d)
         import time
         time.sleep(600)
