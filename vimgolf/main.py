@@ -110,7 +110,7 @@ def inspect(challenge_id, keys, literal_lt, literal_gt):
         with open(in_path, 'w') as f:
             f.write(c.in_text)
         with open(log_path, 'w') as f:
-            f.write(keys_obj.raw_keys)
+            f.write(keys_obj.raw_keys.decode('utf-8'))
         play.replay_single(in_path, log_path)
 
 
