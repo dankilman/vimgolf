@@ -90,7 +90,7 @@ def replay_sequences(dst_path, log_path, sequences, src_in_path):
 
 
 def inspect_sequences(workspace, dst_path, in_path, sequences):
-    # TODO fix <Del> handling
+    # TODO fix <Del>,<BS>,<Up>,<Down>,<Right>,<Left>,<End>,<Home>
     result = find_interesting_sequences(dst_path, sequences)
     in_sequences = result['sequences']
     first = result['first']

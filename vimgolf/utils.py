@@ -34,11 +34,11 @@ def join_lines(string):
 
 
 def style(text, fg=None, **styles):
-    return click.style(text, fg=fg, **styles)
+    return click.style(str(text), fg=fg, **styles)
 
 
 def write(message='', nl=True, err=False, **styles):
-    click.secho(message,  nl=nl, err=err, **styles)
+    click.secho(str(message),  nl=nl, err=err, **styles)
 
 
 def format_(string):
