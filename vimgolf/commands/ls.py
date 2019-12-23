@@ -19,7 +19,7 @@ from vimgolf.html import (
 )
 from vimgolf.utils import http_request, write, style, bool_to_mark
 
-Listing = namedtuple('Listing', 'id name n_entries uploaded score')
+Listing = namedtuple('Listing', 'id name n_entries uploaded score answers')
 
 
 def ls(page=None, limit=LISTING_LIMIT):
@@ -42,7 +42,7 @@ def ls(page=None, limit=LISTING_LIMIT):
         write('The challenge list retrieval has failed', err=True, fg='red')
         raise Failure()
 
-    table_rows = [['#', 'Name', 'Entries', 'ID', 'Submitted', 'Score']]
+    table_rows = [['#', 'Name', 'Entries', 'ID', 'Submitted', 'Score', 'Answers']]
     for idx, listing in enumerate(listings):
         table_row = [
             '{}{} '.format(EXPANSION_PREFIX, idx + 1),
@@ -51,6 +51,7 @@ def ls(page=None, limit=LISTING_LIMIT):
             style(listing.id, fg='yellow'),
             bool_to_mark(listing.uploaded),
             listing.score if listing.score and listing.score > 0 else '-',
+            listing.answers or '-',
         ]
         table_rows.append(table_row)
 
@@ -83,7 +84,8 @@ def extract_listings_from_page(page_html, limit, stored_challenges):
             name=name,
             n_entries=n_entries,
             uploaded=stored_metadata.get('uploaded'),
-            score=stored_metadata.get('best_score')
+            score=stored_metadata.get('best_score'),
+            answers=stored_metadata.get('answers'),
         )
         listings.append(listing)
     return listings

@@ -86,6 +86,7 @@ def show(challenge_id, tracked=False):
         if tracked:
             write('Stats', fg='green')
             metadata = challenge.metadata
+            write('Entered Solutions: {}'.format(metadata['answers']))
             write('Uploaded: {}'.format(metadata['uploaded']))
             write('Correct Solutions: {}'.format(metadata['correct']))
             write('Self Best Score: {}'.format(metadata['best_score']))

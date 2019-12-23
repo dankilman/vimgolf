@@ -174,11 +174,13 @@ class Challenge:
 
     def update_metadata(self, name=None, description=None):
         self._ensure_dir()
+        answers = 0
         uploaded = 0
         correct = 0
         stub_score = 10 ** 10
         best_score = stub_score
         for answer in self.answers:
+            answers += 1
             if answer['uploaded']:
                 uploaded += 1
             if answer['correct']:
@@ -190,6 +192,7 @@ class Challenge:
             'url': get_challenge_url(self.id),
             'uploaded': uploaded,
             'correct': correct,
+            'answers': answers,
             'best_score': best_score if best_score != stub_score else -1,
         })
         if name:
