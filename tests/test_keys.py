@@ -1,6 +1,6 @@
 import pytest
 
-from vimgolf.keys import Keys, parse_raw_keycode_reprs
+from vimgolf.keys import Keys, parse_raw_keycode_reprs, normalize_keycode_repr
 
 
 def test_keys():
@@ -69,3 +69,14 @@ def test_keys_from_raw_keycode_reprs():
         literal_gt='}'
     )
     assert keys.keycode_reprs == ['<', 'Z', 'Z', '>']
+
+
+def test_keycode_repr_normalization():
+    assert normalize_keycode_repr('<cr>') == '<CR>'
+    assert normalize_keycode_repr('<Z') == '<Z'
+    assert normalize_keycode_repr('z>') == 'z>'
+    test_case = 'zZ<cr><cR><Cr><esc><c-A><C-z>'
+    keys = Keys.from_raw_keycode_reprs(test_case, literal_lt=None, literal_gt=None)
+    assert keys.keycode_reprs == [
+        'z', 'Z', '<CR>', '<CR>', '<CR>', '<Esc>', '<C-A>', '<C-Z>'
+    ]

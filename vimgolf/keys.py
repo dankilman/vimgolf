@@ -248,6 +248,7 @@ _KEYCODE_REPR_LOOKUP.update({
 })
 
 _KEYCODE_LOOKUP = {v: k for k, v in _KEYCODE_REPR_LOOKUP.items()}
+_KEYCODE_REPR_NORMALIZED = {k.lower(): k for k in _KEYCODE_LOOKUP}
 
 
 def get_keycode_repr(keycode):
@@ -260,10 +261,20 @@ def get_keycode_repr(keycode):
     return key
 
 
+def normalize_keycode_repr(keycode_repr):
+    if not (keycode_repr.startswith('<') and keycode_repr.endswith('>')):
+        return keycode_repr
+    return _KEYCODE_REPR_NORMALIZED[keycode_repr.lower()]
+
+
 def get_keycode(keycode_repr):
     return _KEYCODE_LOOKUP[keycode_repr]
 
 
+# A naive approach for a key sequence that will save buffer content and quit
+# regardless of the current state.
+# It's certainly not robust, as edge cases can fail it,
+# but for practical vimgolf inputs, failures should be rare enough.
 _REPLAY_QUIT_KEYCODE_REPRS = '<Esc><Esc><Esc>:<C-U>wqall<CR>'
 REPLAY_QUIT_RAW_KEYS = to_raw_keys([
     get_keycode(kr) for kr in
@@ -297,6 +308,7 @@ class Keys:
 
     @classmethod
     def from_keycode_reprs(cls, keycode_reprs):
+        keycode_reprs = [normalize_keycode_repr(kr) for kr in keycode_reprs]
         keycodes = [get_keycode(keycode_repr) for keycode_repr in keycode_reprs]
         raw_keys = to_raw_keys(keycodes)
         return Keys(
