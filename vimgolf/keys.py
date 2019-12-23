@@ -248,6 +248,27 @@ _KEYCODE_REPR_LOOKUP.update({
 })
 
 _KEYCODE_LOOKUP = {v: k for k, v in _KEYCODE_REPR_LOOKUP.items()}
+_KEYCODE_LOOKUP.update({
+    # These are overridden above so we re-add them here
+    '<C-I>': to_bytes(9),
+    '<C-J>': to_bytes(10),
+    '<C-M>': to_bytes(13),
+
+    # <CR> aliases
+    '<Return>': to_bytes(13),
+    '<Enter>': to_bytes(13),
+
+    # it appears -w output is different than -s working input (:help keycodes)
+    '<BS>': to_bytes(8),
+    # TODO figure out how to support <Del> input
+    # '<Del>': to_bytes(127),
+
+    # misc aliases
+    '<Space>': to_bytes(32),  # ' '
+    '<lt>': to_bytes(60),  # <
+    '<Bslash>': to_bytes(92),  # \
+    '<Bar>': to_bytes(124),  # |
+})
 _KEYCODE_REPR_NORMALIZED = {k.lower(): k for k in _KEYCODE_LOOKUP}
 
 
