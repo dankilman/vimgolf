@@ -174,7 +174,7 @@ _KEYCODE_REPR_LOOKUP.update({
     b'\xfc\x06': '<C-S->',
     b'\xfc\x08': '<A->',
     b'\xfc\x0a': '<A-S->',
-    b'\xfc\x0c': '<C-A>',
+    b'\xfc\x0c': '<C-A->',
     b'\xfc\x0e': '<C-A-S->',
     b'\xfc\x10': '<M->',
     b'\xfc\x12': '<M-S->',
@@ -182,7 +182,7 @@ _KEYCODE_REPR_LOOKUP.update({
     b'\xfc\x16': '<M-C-S->',
     b'\xfc\x18': '<M-A->',
     b'\xfc\x1a': '<M-A-S->',
-    b'\xfc\x1c': '<M-C-A>',
+    b'\xfc\x1c': '<M-C-A->',
     b'\xfc\x1e': '<M-C-A-S->',
 
     b'\xfd\x04': '<S-Up>',

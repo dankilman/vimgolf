@@ -73,11 +73,13 @@ def inspect(challenge_id, keys, literal_lt, literal_gt):
             inspect_pairs.append([in_path(i), in_path(i+1)])
         inspect_pairs.append([in_path(0), in_path(len(in_sequences) - 1)])
 
+        # TODO fix <Del> handling
         inspect_pairs_path = os.path.join(d, 'inspect-pairs.vim')
         with open(inspect_pairs_path, 'w') as f:
             f.write("let g:inspectPairs = [")
             for first, second in inspect_pairs:
                 f.write("['{}','{}'],".format(first, second))
-            f.write("]")
+            f.write("]\n")
+            f.write('call InspectCompare()')
 
         play.inspect(inspect_pairs_path)
