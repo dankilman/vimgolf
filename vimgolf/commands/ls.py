@@ -22,7 +22,7 @@ from vimgolf.utils import http_request, write, style, bool_to_mark
 Listing = namedtuple('Listing', 'id name n_entries uploaded score answers')
 
 
-def ls(page=None, limit=LISTING_LIMIT):
+def ls(incomplete=False, page=None, limit=LISTING_LIMIT):
     logger.info('list_(%s, %s)', page, limit)
     stored_challenges = get_stored_challenges()
     try:
@@ -44,6 +44,8 @@ def ls(page=None, limit=LISTING_LIMIT):
 
     table_rows = [['#', 'Name', 'Entries', 'ID', '⬆', 'Score', 'Answers']]
     for idx, listing in enumerate(listings):
+        if incomplete and listing.uploaded:
+            continue
         table_row = [
             '{}{} '.format(EXPANSION_PREFIX, idx + 1),
             listing.name,
@@ -78,6 +80,8 @@ def extract_listings_from_page(page_html, limit, stored_challenges):
                 n_entries = int([x for x in child.data.split() if x.isdigit()][0])
                 break
         stored_challenge = stored_challenges.get(id_)
+        if stored_challenge:
+            stored_challenge.update_metadata()
         stored_metadata = stored_challenge.metadata if stored_challenge else {}
         listing = Listing(
             id=id_,

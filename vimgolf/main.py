@@ -53,9 +53,10 @@ def put(challenge_id):
 
 @command()
 @argument('spec', default='', callback=lambda _, __, value: parse_list_spec(value))
-def ls(spec):
+@option('-i', '--incomplete', is_flag=True, help='Show incomplete (not submitted) items only')
+def ls(spec, incomplete):
     """list vimgolf.com challenges (spec syntax: [PAGE][:LIMIT])"""
-    commands.ls(**spec)
+    commands.ls(incomplete=incomplete, **spec)
 
 
 @command()
