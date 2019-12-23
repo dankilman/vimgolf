@@ -106,8 +106,6 @@ def inspect_sequences(workspace, dst_path, in_path, sequences):
     )
 
     inspect_pairs_path = build_inspect_pairs(
-        first=first,
-        last=last,
         in_path=in_path,
         in_sequences=in_sequences,
         workspace=workspace,
@@ -131,11 +129,12 @@ def prepare_inspect_files(dst_path, first, in_path, in_sequences, last, sequence
                 in_f.write(dst_f.read())
 
 
-def build_inspect_pairs(first, in_path, in_sequences, last, workspace):
+def build_inspect_pairs(in_path, in_sequences, workspace):
     inspect_pairs = []
     for i in range(len(in_sequences) - 1):
         inspect_pairs.append([in_path(i), in_path(i + 1)])
-    inspect_pairs.append([in_path(first), in_path(last)])
+    # add pair for first/last
+    inspect_pairs.append([in_path(0), in_path(len(in_sequences) - 1)])
     path = os.path.join(workspace, 'inspect-pairs.vim')
     with open(path, 'w') as f:
         f.write("let g:inspectPairs = [")
