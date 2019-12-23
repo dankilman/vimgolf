@@ -42,7 +42,7 @@ def ls(page=None, limit=LISTING_LIMIT):
         write('The challenge list retrieval has failed', err=True, fg='red')
         raise Failure()
 
-    table_rows = [['#', 'Name', 'Entries', 'ID', 'Submitted', 'Score', 'Answers']]
+    table_rows = [['#', 'Name', 'Entries', 'ID', '⬆', 'Score', 'Answers']]
     for idx, listing in enumerate(listings):
         table_row = [
             '{}{} '.format(EXPANSION_PREFIX, idx + 1),
