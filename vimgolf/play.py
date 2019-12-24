@@ -10,40 +10,6 @@ from vimgolf.utils import write, input_loop, http_request
 from vimgolf.vim import vim
 
 
-def base_args():
-    return [
-        '-Z',  # restricted mode, utilities not allowed
-        '-n',  # no swap file, memory only editing
-        '--noplugin',  # no plugins
-        '-i', 'NONE',  # don't load .viminfo (e.g., has saved macros, etc.)
-        '+0',  # start on line 0
-        '-u', PLAY_VIMRC_PATH,  # vimgolf .vimrc
-        '-U', 'NONE',  # don't load .gvimrc
-    ]
-
-
-def play_args(infile, logfile):
-    return base_args() + [
-        '-W', logfile,  # keylog file (overwrites existing)
-        infile,
-    ]
-
-
-def replay_args(infile, logfile, mapping_path):
-    return base_args() + [
-        '-S', mapping_path,
-        '-s', logfile,  # keylog will call mapping
-        infile,
-    ]
-
-
-def inspect_args(inspect_pairs_path):
-    return base_args() + [
-        '-S', INSPECT_VIM_PATH,
-        '-S', inspect_pairs_path,
-    ]
-
-
 def play(challenge, workspace):
     logger.info('play(...)')
 
@@ -131,6 +97,40 @@ def replay(infile, logfile, mappingfile):
 
 def inspect(inspect_pairs_path):
     vim(inspect_args(inspect_pairs_path), check=True)
+
+
+def base_args():
+    return [
+        '-Z',  # restricted mode, utilities not allowed
+        '-n',  # no swap file, memory only editing
+        '--noplugin',  # no plugins
+        '-i', 'NONE',  # don't load .viminfo (e.g., has saved macros, etc.)
+        '+0',  # start on line 0
+        '-u', PLAY_VIMRC_PATH,  # vimgolf .vimrc
+        '-U', 'NONE',  # don't load .gvimrc
+    ]
+
+
+def play_args(infile, logfile):
+    return base_args() + [
+        '-W', logfile,  # keylog file (overwrites existing)
+        infile,
+    ]
+
+
+def replay_args(infile, logfile, mappingfile):
+    return base_args() + [
+        '-S', mappingfile,
+        '-s', logfile,  # keylog will call mapping
+        infile,
+    ]
+
+
+def inspect_args(inspect_pairs_path):
+    return base_args() + [
+        '-S', INSPECT_VIM_PATH,
+        '-S', inspect_pairs_path,
+    ]
 
 
 def menu_loop(
