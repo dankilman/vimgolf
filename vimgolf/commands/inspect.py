@@ -3,7 +3,7 @@ import os
 import shutil
 import tempfile
 
-from vimgolf import play, logger, Failure
+from vimgolf import logger, Failure, INSPECT_VIM_PATH
 from vimgolf.challenge import (
     Challenge,
     expand_challenge_id,
@@ -12,6 +12,7 @@ from vimgolf.challenge import (
 )
 from vimgolf.keys import REPLAY_QUIT_KEYCODE_REPRS, tokenize_raw_keycode_reprs
 from vimgolf.utils import write
+from vimgolf.vim import vim, BASE_ARGS
 
 
 def inspect(challenge_id, keys, literal_lt, literal_gt):
@@ -89,20 +90,20 @@ def replay_sequences(workspace, dst_path, mapping_path, sequences, src_in_path):
         final_keycode_reprs = '{}{}'.format(keycode_reprs, REPLAY_QUIT_KEYCODE_REPRS)
         with open(mapping_path(i), 'w') as f:
             f.write('nnoremap {} {}'.format(mapping, final_keycode_reprs))
-        play.replay(infile=dst_path(i), logfile=log_path, mappingfile=mapping_path(i))
+
+        vim(BASE_ARGS + [
+            '-S', mapping_path(i),
+            '-s', log_path,
+            dst_path(i),
+        ], check=True)
 
 
 def inspect_sequences(workspace, dst_path, in_path, sequences):
-    result = find_interesting_sequences(dst_path, sequences)
-    in_sequences = result['sequences']
-    first = result['first']
-    last = result['last']
+    in_sequences = find_interesting_sequences(dst_path, sequences)
 
     prepare_inspect_files(
         in_path=in_path,
         dst_path=dst_path,
-        first=first,
-        last=last,
         sequences=sequences,
         in_sequences=in_sequences,
     )
@@ -113,17 +114,20 @@ def inspect_sequences(workspace, dst_path, in_path, sequences):
         workspace=workspace,
     )
 
-    play.inspect(inspect_pairs_path)
+    vim(BASE_ARGS + [
+        '-S', INSPECT_VIM_PATH,
+        '-S', inspect_pairs_path,
+    ], check=True)
 
 
-def prepare_inspect_files(dst_path, first, in_path, in_sequences, last, sequences):
+def prepare_inspect_files(dst_path, in_path, in_sequences, sequences):
     for i, in_sequence_index in enumerate(in_sequences):
         with open(in_path(i), 'wb') as in_f:
-            if in_sequence_index == first:
+            if in_sequence_index == 0:
                 reprs = '(IN)'
             else:
                 reprs = ''.join(sequences[in_sequence_index])
-                if in_sequence_index == last:
+                if in_sequence_index == len(sequences) - 1:
                     reprs = '{} (OUT)'.format(reprs)
             header = '{}\n----------------------\n'.format(reprs)
             in_f.write(bytes(header, 'utf-8'))
@@ -137,28 +141,22 @@ def build_inspect_pairs(in_path, in_sequences, workspace):
         inspect_pairs.append([in_path(i), in_path(i + 1)])
     # add pair for first/last
     inspect_pairs.append([in_path(0), in_path(len(in_sequences) - 1)])
-    path = os.path.join(workspace, 'inspect-pairs.vim')
-    with open(path, 'w') as f:
+    inspect_pairs_path = os.path.join(workspace, 'inspect-pairs.vim')
+    with open(inspect_pairs_path, 'w') as f:
         f.write("let g:inspectPairs = [")
         for first1, second in inspect_pairs:
             f.write("['{}','{}'],".format(first1, second))
         f.write("]\n")
         f.write('call InspectCompare()')
-    inspect_pairs_path = path
     return inspect_pairs_path
 
 
 def find_interesting_sequences(dst_path, sequences):
-    first_sequence = 0
     last_sequence = len(sequences) - 1
-    in_sequences = [first_sequence]
+    in_sequences = [0]
     for i in range(len(sequences) - 1):
         if not filecmp.cmp(dst_path(i), dst_path(i + 1)):
             in_sequences.append(i + 1)
     if last_sequence not in in_sequences:
         in_sequences.append(last_sequence)
-    return {
-        'first': first_sequence,
-        'last': last_sequence,
-        'sequences': in_sequences
-    }
+    return in_sequences

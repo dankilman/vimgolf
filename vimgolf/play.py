@@ -3,11 +3,11 @@ import json
 import os
 import urllib.parse
 
-from vimgolf import logger, PLAY_VIMRC_PATH, GOLF_HOST, INSPECT_VIM_PATH
+from vimgolf import logger, GOLF_HOST
 from vimgolf.challenge import get_challenge_url
 from vimgolf.keys import Keys
 from vimgolf.utils import write, input_loop, http_request
-from vimgolf.vim import vim
+from vimgolf.vim import vim, BASE_ARGS
 
 
 def play(challenge, workspace):
@@ -79,7 +79,10 @@ def main_loop(challenge, infile, logfile, outfile):
 
 
 def play_single(infile, logfile, outfile):
-    vim(play_args(infile, logfile), check=True)
+    vim(BASE_ARGS + [
+        '-W', logfile,  # keylog file (overwrites existing)
+        infile,
+    ], check=True)
     correct = filecmp.cmp(infile, outfile)
     with open(logfile, 'rb') as _f:
         keys = Keys.from_raw_keys(_f.read())
@@ -89,48 +92,6 @@ def play_single(infile, logfile, outfile):
         'raw_keys': keys.raw_keys,
         'score': keys.score,
     }
-
-
-def replay(infile, logfile, mappingfile):
-    vim(replay_args(infile, logfile, mappingfile), check=True)
-
-
-def inspect(inspect_pairs_path):
-    vim(inspect_args(inspect_pairs_path), check=True)
-
-
-def base_args():
-    return [
-        '-Z',  # restricted mode, utilities not allowed
-        '-n',  # no swap file, memory only editing
-        '--noplugin',  # no plugins
-        '-i', 'NONE',  # don't load .viminfo (e.g., has saved macros, etc.)
-        '+0',  # start on line 0
-        '-u', PLAY_VIMRC_PATH,  # vimgolf .vimrc
-        '-U', 'NONE',  # don't load .gvimrc
-    ]
-
-
-def play_args(infile, logfile):
-    return base_args() + [
-        '-W', logfile,  # keylog file (overwrites existing)
-        infile,
-    ]
-
-
-def replay_args(infile, logfile, mappingfile):
-    return base_args() + [
-        '-S', mappingfile,
-        '-s', logfile,  # keylog will call mapping
-        infile,
-    ]
-
-
-def inspect_args(inspect_pairs_path):
-    return base_args() + [
-        '-S', INSPECT_VIM_PATH,
-        '-S', inspect_pairs_path,
-    ]
 
 
 def menu_loop(

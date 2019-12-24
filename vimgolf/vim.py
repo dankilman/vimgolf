@@ -2,8 +2,18 @@ import os
 import subprocess
 import sys
 
-from vimgolf import GOLF_VIM, Failure, logger
+from vimgolf import GOLF_VIM, Failure, logger, PLAY_VIMRC_PATH
 from vimgolf.utils import find_executable, write, confirm
+
+BASE_ARGS = [
+    '-Z',  # restricted mode, utilities not allowed
+    '-n',  # no swap file, memory only editing
+    '--noplugin',  # no plugins
+    '-i', 'NONE',  # don't load .viminfo (e.g., has saved macros, etc.)
+    '+0',  # start on line 0
+    '-u', PLAY_VIMRC_PATH,  # vimgolf .vimrc
+    '-U', 'NONE',  # don't load .gvimrc
+]
 
 
 def vim(args, **run_kwargs):
