@@ -81,7 +81,7 @@ def build_sequences(keys, literal_gt, literal_lt):
 
 def replay_sequences(workspace, dst_path, mapping_path, sequences, src_in_path):
     log_path = os.path.join(workspace, 'log')
-    mapping = '\\q'
+    mapping = '\\\\q'
     with open(log_path, 'w') as f:
         f.write(mapping)
     for i, tokens in enumerate(sequences):

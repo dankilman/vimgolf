@@ -29,7 +29,7 @@ from vimgolf.html import (
 from vimgolf.utils import http_request, join_lines, write, bool_to_mark
 
 
-def show(challenge_id, tracked=False):
+def show(challenge_id):
     challenge_id = expand_challenge_id(challenge_id)
     logger.info('show(%s)', challenge_id)
 
@@ -49,6 +49,7 @@ def show(challenge_id, tracked=False):
         leaders = data['leaders']
 
         challenge.update_metadata(name, description)
+        metadata = challenge.metadata
 
         start_file = challenge.in_text
         if not start_file.endswith('\n'):
@@ -82,31 +83,28 @@ def show(challenge_id, tracked=False):
         write('End File', fg='green')
         write(end_file, nl=False)
         write(separator)
-
-        if tracked:
-            write('Stats', fg='green')
-            metadata = challenge.metadata
-            write('Entered Solutions: {}'.format(metadata['answers']))
-            write('Uploaded: {}'.format(metadata['uploaded']))
-            write('Correct Solutions: {}'.format(metadata['correct']))
-            write('Self Best Score: {}'.format(metadata['best_score']))
-            answers = challenge.answers
-            ignored_answer_suffix = 'ZQ'
-            answer_rows = [['Keys', 'Correct', 'Submitted', 'Score', 'Timestamp']]
-            for answer in answers:
-                keys = ''.join(answer['keys'])
-                if keys.endswith(ignored_answer_suffix):
-                    continue
-                answer_row = [
-                    keys,
-                    bool_to_mark(answer['correct']),
-                    bool_to_mark(answer['uploaded']),
-                    answer['score'],
-                    answer['timestamp'],
-                ]
-                answer_rows.append(answer_row)
-            if len(answer_rows) > 1:
-                write(AsciiTable(answer_rows).table)
+        write('Stats', fg='green')
+        write('Entered Solutions: {}'.format(metadata['answers']))
+        write('Uploaded: {}'.format(metadata['uploaded']))
+        write('Correct Solutions: {}'.format(metadata['correct']))
+        write('Self Best Score: {}'.format(metadata['best_score']))
+        answers = challenge.answers
+        ignored_answer_suffix = 'ZQ'
+        answer_rows = [['Keys', 'Correct', 'Submitted', 'Score', 'Timestamp']]
+        for answer in answers:
+            keys = ''.join(answer['keys'])
+            if keys.endswith(ignored_answer_suffix):
+                continue
+            answer_row = [
+                keys,
+                bool_to_mark(answer['correct']),
+                bool_to_mark(answer['uploaded']),
+                answer['score'],
+                answer['timestamp'],
+            ]
+            answer_rows.append(answer_row)
+        if len(answer_rows) > 1:
+            write(AsciiTable(answer_rows).table)
     except Failure:
         raise
     except Exception:

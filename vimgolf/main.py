@@ -61,10 +61,9 @@ def ls(spec, incomplete):
 
 @command()
 @argument('challenge_id')
-@option('-t', '--tracked', is_flag=True, help='Include tracked data')
-def show(challenge_id, tracked):
+def show(challenge_id):
     """show vimgolf.com challenge"""
-    commands.show(challenge_id, tracked)
+    commands.show(challenge_id)
 
 
 @command()
