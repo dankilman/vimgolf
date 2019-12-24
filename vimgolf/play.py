@@ -29,9 +29,10 @@ def play_args(infile, logfile):
     ]
 
 
-def replay_args(infile, logfile):
+def replay_args(infile, logfile, mapping_path):
     return base_args() + [
-        '-s', logfile,  # source keylog file
+        '-S', mapping_path,
+        '-s', logfile,  # keylog will call mapping
         infile,
     ]
 
@@ -124,8 +125,8 @@ def play_single(infile, logfile, outfile):
     }
 
 
-def replay(infile, logfile):
-    vim(replay_args(infile, logfile), check=True)
+def replay(infile, logfile, mappingfile):
+    vim(replay_args(infile, logfile, mappingfile), check=True)
 
 
 def inspect(inspect_pairs_path):

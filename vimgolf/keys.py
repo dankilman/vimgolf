@@ -34,23 +34,13 @@ def parse_keycodes(raw_keys):
     return keycodes
 
 
-def to_raw_keys(keycodes):
-    raw_keys = []
-    for keycode in keycodes:
-        if keycode[0] == 0:
-            raw_keys.append(keycode[1])
-        else:
-            raw_keys.extend([0x80, keycode[0], keycode[1]])
-    return bytes(raw_keys)
-
-
-def parse_raw_keycode_reprs(
+def tokenize_raw_keycode_reprs(
         raw_keycode_reprs: str,
         literal_lt='',
         literal_gt=''):
     if literal_lt and literal_gt:
         assert literal_lt != literal_gt
-    keycodes = []
+    tokens = []
     multi_in_progress = False
     multi_keys = []
     for raw_keycode_repr in raw_keycode_reprs:
@@ -60,17 +50,17 @@ def parse_raw_keycode_reprs(
         elif raw_keycode_repr == '>':
             multi_keys.append(raw_keycode_repr)
             multi_in_progress = False
-            keycodes.append(''.join(multi_keys))
+            tokens.append(''.join(multi_keys))
             multi_keys = []
         elif multi_in_progress:
             multi_keys.append(raw_keycode_repr)
         elif literal_lt and raw_keycode_repr == literal_lt:
-            keycodes.append('<')
+            tokens.append('<')
         elif literal_gt and raw_keycode_repr == literal_gt:
-            keycodes.append('>')
+            tokens.append('>')
         else:
-            keycodes.append(raw_keycode_repr)
-    return keycodes
+            tokens.append(raw_keycode_repr)
+    return tokens
 
 
 # keystrokes that should not impact score (e.g., window focus)
@@ -247,30 +237,6 @@ _KEYCODE_REPR_LOOKUP.update({
     b'\xfd\x58': '<C-End>',
 })
 
-_KEYCODE_LOOKUP = {v: k for k, v in _KEYCODE_REPR_LOOKUP.items()}
-_KEYCODE_LOOKUP.update({
-    # These are overridden above so we re-add them here
-    '<C-I>': to_bytes(9),
-    '<C-J>': to_bytes(10),
-    '<C-M>': to_bytes(13),
-
-    # <CR> aliases
-    '<Return>': to_bytes(13),
-    '<Enter>': to_bytes(13),
-
-    # it appears -w output is different than -s working input (:help keycodes)
-    '<BS>': to_bytes(8),
-    # TODO figure out how to support <Del> input
-    # '<Del>': to_bytes(127),
-
-    # misc aliases
-    '<Space>': to_bytes(32),  # ' '
-    '<lt>': to_bytes(60),  # <
-    '<Bslash>': to_bytes(92),  # \
-    '<Bar>': to_bytes(124),  # |
-})
-_KEYCODE_REPR_NORMALIZED = {k.lower(): k for k in _KEYCODE_LOOKUP}
-
 
 def get_keycode_repr(keycode):
     if keycode in _KEYCODE_REPR_LOOKUP:
@@ -282,25 +248,11 @@ def get_keycode_repr(keycode):
     return key
 
 
-def normalize_keycode_repr(keycode_repr):
-    if not (keycode_repr.startswith('<') and keycode_repr.endswith('>')):
-        return keycode_repr
-    return _KEYCODE_REPR_NORMALIZED[keycode_repr.lower()]
-
-
-def get_keycode(keycode_repr):
-    return _KEYCODE_LOOKUP[keycode_repr]
-
-
 # A naive approach for a key sequence that will save buffer content and quit
 # regardless of the current state.
 # It's certainly not robust, as edge cases can fail it,
 # but for practical vimgolf inputs, failures should be rare enough.
-_REPLAY_QUIT_KEYCODE_REPRS = '<Esc><Esc><Esc>:<C-U>wqall<CR>'
-REPLAY_QUIT_RAW_KEYS = to_raw_keys([
-    get_keycode(kr) for kr in
-    parse_raw_keycode_reprs(_REPLAY_QUIT_KEYCODE_REPRS)
-])
+REPLAY_QUIT_KEYCODE_REPRS = '<Esc><Esc><Esc>:<C-U>wqall<CR>'
 
 
 class Keys:
@@ -326,22 +278,3 @@ class Keys:
             keycodes=keycodes,
             keycode_reprs=keycode_reprs,
         )
-
-    @classmethod
-    def from_keycode_reprs(cls, keycode_reprs):
-        keycode_reprs = [normalize_keycode_repr(kr) for kr in keycode_reprs]
-        keycodes = [get_keycode(keycode_repr) for keycode_repr in keycode_reprs]
-        raw_keys = to_raw_keys(keycodes)
-        return Keys(
-            raw_keys=raw_keys,
-            keycodes=keycodes,
-            keycode_reprs=keycode_reprs
-        )
-
-    @classmethod
-    def from_raw_keycode_reprs(cls, raw_keycode_reprs, literal_lt, literal_gt):
-        return cls.from_keycode_reprs(parse_raw_keycode_reprs(
-            raw_keycode_reprs=raw_keycode_reprs,
-            literal_lt=literal_lt,
-            literal_gt=literal_gt,
-        ))

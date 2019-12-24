@@ -10,7 +10,7 @@ from vimgolf.challenge import (
     validate_challenge_id,
     show_challenge_id_error,
 )
-from vimgolf.keys import Keys, REPLAY_QUIT_RAW_KEYS
+from vimgolf.keys import REPLAY_QUIT_KEYCODE_REPRS, tokenize_raw_keycode_reprs
 from vimgolf.utils import write
 
 
@@ -48,15 +48,16 @@ def inspect(challenge_id, keys, literal_lt, literal_gt):
         def dst_path(index):
             return os.path.join(workspace, '{}{}{}'.format(name, zfill(index), ext))
 
-        def log_path(index):
-            return os.path.join(workspace, 'log{}'.format(zfill(index)))
+        def mapping_path(index):
+            return os.path.join(workspace, 'mapping{}.vim'.format(zfill(index)))
 
         def in_path(index):
             return os.path.join(workspace, 'inspect-{}{}{}'.format(name, zfill(index), ext))
 
         replay_sequences(
+            workspace=workspace,
             dst_path=dst_path,
-            log_path=log_path,
+            mapping_path=mapping_path,
             sequences=sequences,
             src_in_path=src_in_path
         )
@@ -69,28 +70,29 @@ def inspect(challenge_id, keys, literal_lt, literal_gt):
 
 
 def build_sequences(keys, literal_gt, literal_lt):
-    full_processed_keys = Keys.from_raw_keycode_reprs(
+    tokens = tokenize_raw_keycode_reprs(
         raw_keycode_reprs=keys,
         literal_lt=literal_lt,
         literal_gt=literal_gt,
     )
-    keycode_reprs = full_processed_keys.keycode_reprs
-    return [
-        Keys.from_keycode_reprs(keycode_reprs[:i])
-        for i in range(len(keycode_reprs) + 1)
-    ]
+    return [tokens[:i] for i in range(len(tokens) + 1)]
 
 
-def replay_sequences(dst_path, log_path, sequences, src_in_path):
-    for i, processed_keys in enumerate(sequences):
+def replay_sequences(workspace, dst_path, mapping_path, sequences, src_in_path):
+    log_path = os.path.join(workspace, 'log')
+    mapping = '\\q'
+    with open(log_path, 'w') as f:
+        f.write(mapping)
+    for i, tokens in enumerate(sequences):
         shutil.copy(src_in_path, dst_path(i))
-        with open(log_path(i), 'wb') as f:
-            f.write(processed_keys.raw_keys + REPLAY_QUIT_RAW_KEYS)
-        play.replay(infile=dst_path(i), logfile=log_path(i))
+        keycode_reprs = ''.join(tokens)
+        final_keycode_reprs = '{}{}'.format(keycode_reprs, REPLAY_QUIT_KEYCODE_REPRS)
+        with open(mapping_path(i), 'w') as f:
+            f.write('nnoremap {} {}'.format(mapping, final_keycode_reprs))
+        play.replay(infile=dst_path(i), logfile=log_path, mappingfile=mapping_path(i))
 
 
 def inspect_sequences(workspace, dst_path, in_path, sequences):
-    # TODO fix <Del>,<BS>,<Up>,<Down>,<Right>,<Left>,<End>,<Home>
     result = find_interesting_sequences(dst_path, sequences)
     in_sequences = result['sequences']
     first = result['first']
@@ -120,7 +122,7 @@ def prepare_inspect_files(dst_path, first, in_path, in_sequences, last, sequence
             if in_sequence_index == first:
                 reprs = '(IN)'
             else:
-                reprs = ''.join(sequences[in_sequence_index].keycode_reprs)
+                reprs = ''.join(sequences[in_sequence_index])
                 if in_sequence_index == last:
                     reprs = '{} (OUT)'.format(reprs)
             header = '{}\n----------------------\n'.format(reprs)
