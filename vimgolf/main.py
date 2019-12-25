@@ -76,10 +76,15 @@ def config(api_key):
 @command()
 @argument('challenge_id')
 @argument('keys')
-@option('-l', '--literal-lt')
-@option('-g', '--literal-gt')
+@option('-l', '--literal-lt', help='If `keys` contains a literal `<`, replace it with `literal-lt`')
+@option('-g', '--literal-gt', help='If `keys` contains a literal `>`, replace it with `literal-gt`')
 def inspect(challenge_id, keys, literal_lt, literal_gt):
-    """inspect behaviour of a key sequence applied to challenge"""
+    """inspect behaviour of a key sequence applied to challenge.
+
+       The second argument (keys) should be literal key sequence: e.g. `Ji1<Esc>ZZ`.
+
+       Use <C-J> and <C-K> inside the inspect window to move between steps
+    """
     commands.inspect(challenge_id, keys, literal_lt, literal_gt)
 
 

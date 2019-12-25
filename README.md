@@ -1,5 +1,5 @@
-vimgolf
-=======
+vimgolf (fork)
+==============
 
 This project contains a [vimgolf](https://www.vimgolf.com/) client written in Python.
 
@@ -21,7 +21,7 @@ additional features:
   Specifically, for each entered solution, it will display the key sequence entered, whether
   it was correct, whether it was submitted to vimgolf.com, what score did it achieve and when
   was it entered.
-- new `vimgolf inspect` command where you can examine provided solutions, step by step.
+- new `vimgolf inspect` command to inspect provided solutions, step by step.
   (use `<C-J>` and `<C-K>` in the inspect window to move between steps)
 
 Installation
@@ -32,7 +32,7 @@ Installation
 - Python 3.5 or greater
 
 #### Install
-Currently, the fork is not published published to pypi so you need to clone it.
+Currently, the fork is not published to pypi, so you need to clone it first.
 
 ```sh
 $ git clone https://github.com/dankilman/vimgolf.git
@@ -45,17 +45,8 @@ Usage
 
 #### Launch
 
-If the launcher script was installed within a directory on your `PATH`, vimgolf can be launched
-directly.
-
 ```sh
 $ vimgolf
-```
-
-Otherwise, vimgolf can be launched by passing its module name to Python.
-
-```sh
-$ python3 -m vimgolf
 ```
 
 #### Commands
