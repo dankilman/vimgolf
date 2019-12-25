@@ -83,6 +83,10 @@ sixth challenge presented in the most recent call to `vimgolf ls`.
 Demo
 ----
 
+<p align="center">
+  <img width="600" src="https://cdn.rawgit.com/dankilman/vimgolf/master/screencast.svg">
+</p>
+
 License
 -------
 
