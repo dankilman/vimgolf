@@ -12,8 +12,8 @@ additional features:
 - Use locally cached version of challenge when running `vimgolf put`, if one exists.
 - Keep local version of challenges and track all entered solutions in 
   `$XDG_DATA_HOME/vimgolf/challenges`.
-- Update `vimgolf list` to show output in a table.
-- Update `vimgolf list` to show whether a challenge was already submitted and 
+- Update `vimgolf ls` to show output in a table.
+- Update `vimgolf ls` to show whether a challenge was already submitted and 
   what is the best score achieved for it so far (only applies to challenges submitted through
   this client).
 - `vimgolf show` will display additional information about previously entered solutions 
@@ -21,7 +21,7 @@ additional features:
   Specifically, for each entered solution, it will display the key sequence entered, whether
   it was correct, whether it was submitted to vimgolf.com, what score did it achieve and when
   was it entered.
-- new `vimgolf inspect` command where your can examine provided solutions, step by step.
+- new `vimgolf inspect` command where you can examine provided solutions, step by step.
   (use `<C-J>` and `<C-K>` in the inspect window to move between steps)
 
 Installation
@@ -77,8 +77,8 @@ Commands:
 ```
 
 `CHALLENGE_ID` can be a 24-character ID from vimgolf.com, or a plus-prefixed ID corresponding to the
-last invocation of `vimgolf list`. For example, a `CHALLENGE_ID` of `+6` would correspond to the
-sixth challenge presented in the most recent call to `vimgolf list`.
+last invocation of `vimgolf ls`. For example, a `CHALLENGE_ID` of `+6` would correspond to the
+sixth challenge presented in the most recent call to `vimgolf ls`.
 
 Demo
 ----
