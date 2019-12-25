@@ -84,7 +84,7 @@ Demo
 ----
 
 <p align="center">
-  <img width="600" src="https://cdn.rawgit.com/dankilman/vimgolf/master/screencast.svg">
+  <img width="850" src="https://github.com/dankilman/vimgolf/blob/add-replay/screencast.svg">
 </p>
 
 License
