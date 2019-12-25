@@ -10,7 +10,7 @@ from vimgolf.challenge import (
     validate_challenge_id,
     show_challenge_id_error,
 )
-from vimgolf.keys import REPLAY_QUIT_KEYCODE_REPRS, tokenize_raw_keycode_reprs
+from vimgolf.keys import tokenize_raw_keycode_reprs, REPLAY_QUIT_TOKENS
 from vimgolf.utils import write
 from vimgolf.vim import vim, BASE_ARGS
 
@@ -49,16 +49,15 @@ def inspect(challenge_id, keys, literal_lt, literal_gt):
         def dst_path(index):
             return os.path.join(workspace, '{}{}{}'.format(name, zfill(index), ext))
 
-        def mapping_path(index):
+        def script_path(index):
             return os.path.join(workspace, 'mapping{}.vim'.format(zfill(index)))
 
         def in_path(index):
             return os.path.join(workspace, 'inspect-{}{}{}'.format(name, zfill(index), ext))
 
         replay_sequences(
-            workspace=workspace,
             dst_path=dst_path,
-            mapping_path=mapping_path,
+            script_path=script_path,
             sequences=sequences,
             src_in_path=src_in_path
         )
@@ -79,21 +78,20 @@ def build_sequences(keys, literal_gt, literal_lt):
     return [tokens[:i] for i in range(len(tokens) + 1)]
 
 
-def replay_sequences(workspace, dst_path, mapping_path, sequences, src_in_path):
-    log_path = os.path.join(workspace, 'log')
-    mapping = '\\\\q'
-    with open(log_path, 'w') as f:
-        f.write(mapping)
+def replay_sequences(dst_path, script_path, sequences, src_in_path):
     for i, tokens in enumerate(sequences):
         shutil.copy(src_in_path, dst_path(i))
-        keycode_reprs = ''.join(tokens)
-        final_keycode_reprs = '{}{}'.format(keycode_reprs, REPLAY_QUIT_KEYCODE_REPRS)
-        with open(mapping_path(i), 'w') as f:
-            f.write('nnoremap {} {}'.format(mapping, final_keycode_reprs))
+        all_tokens = tokens + REPLAY_QUIT_TOKENS
+        escaped_tokens = [
+            '\\{}'.format(t) if len(t) > 1 else t
+            for t in all_tokens
+        ]
+        final_keys = ''.join(escaped_tokens)
+        with open(script_path(i), 'w') as f:
+            f.write('call feedkeys("{}", "t")'.format(final_keys))
 
         vim(BASE_ARGS + [
-            '-S', mapping_path(i),
-            '-s', log_path,
+            '-S', script_path(i),
             dst_path(i),
         ], check=True)
 

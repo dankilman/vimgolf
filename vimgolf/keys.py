@@ -253,6 +253,7 @@ def get_keycode_repr(keycode):
 # It's certainly not robust, as edge cases can fail it,
 # but for practical vimgolf inputs, failures should be rare enough.
 REPLAY_QUIT_KEYCODE_REPRS = '<Esc><Esc><Esc>:<C-U>wqall<CR>'
+REPLAY_QUIT_TOKENS = tokenize_raw_keycode_reprs(REPLAY_QUIT_KEYCODE_REPRS)
 
 
 class Keys:
