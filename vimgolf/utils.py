@@ -5,6 +5,8 @@ import urllib.request
 from collections import namedtuple
 from pathlib import Path
 
+import click
+
 USER_AGENT = 'vimgolf'
 
 HttpResponse = namedtuple('HttpResponse', 'code msg headers body')
@@ -31,32 +33,12 @@ def join_lines(string):
     return ' '.join(lines)
 
 
-def maybe_colorize(string, stream, color=None):
-    color_lookup = {
-        'red':     '\033[31m',
-        'green':   '\033[32m',
-        'yellow':  '\033[33m',
-        'blue':    '\033[34m',
-        'magenta': '\033[35m',
-        'cyan':    '\033[36m',
-    }
-    end_color = '\033[0m'
-    if color and color not in color_lookup:
-        raise RuntimeError('Unavailable color: {}'.format(color))
-    if color and hasattr(stream, 'isatty') and stream.isatty():
-        string = color_lookup[color] + string + end_color
-    return string
+def style(text, fg=None, **styles):
+    return click.style(str(text), fg=fg, **styles)
 
 
-def write(string, end='\n', stream=None, color=None):
-    string = str(string)
-    if stream is None:
-        stream = sys.stdout
-    string = maybe_colorize(string, stream, color)
-    stream.write(string)
-    if end is not None:
-        stream.write(str(end))
-    stream.flush()
+def write(message='', nl=True, err=False, **styles):
+    click.secho(str(message),  nl=nl, err=err, **styles)
 
 
 def format_(string):
@@ -81,24 +63,16 @@ def input_loop(prompt, strip=True, required=True):
                 continue
             return selection
         except EOFError:
-            write('', stream=sys.stderr)
+            write(err=True)
             sys.exit(1)
         except KeyboardInterrupt:
-            write('', stream=sys.stderr)
-            write('KeyboardInterrupt', stream=sys.stderr)
+            write(err=True)
+            write('KeyboardInterrupt', err=True)
             continue
 
 
 def confirm(prompt):
-    while True:
-        selection = input_loop('{} [y/n] '.format(prompt)).lower()
-        if selection in ('y', 'yes'):
-            break
-        elif selection in ('n', 'no'):
-            return False
-        else:
-            write('Invalid selection: {}'.format(selection), stream=sys.stdout, color='red')
-    return True
+    return click.confirm(prompt)
 
 
 def find_executable_unix(executable):
@@ -144,4 +118,5 @@ def find_executable(executable):
         return find_executable_unix(executable)
 
 
-bool_to_mark = lambda m: '✅' if m else '❌'
+def bool_to_mark(m):
+    return '✅' if m else '❌'

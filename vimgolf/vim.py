@@ -2,8 +2,18 @@ import os
 import subprocess
 import sys
 
-from vimgolf import GOLF_VIM, Failure, logger
+from vimgolf import GOLF_VIM, Failure, logger, PLAY_VIMRC_PATH
 from vimgolf.utils import find_executable, write, confirm
+
+BASE_ARGS = [
+    '-Z',  # restricted mode, utilities not allowed
+    '-n',  # no swap file, memory only editing
+    '--noplugin',  # no plugins
+    '-i', 'NONE',  # don't load .viminfo (e.g., has saved macros, etc.)
+    '+0',  # start on line 0
+    '-u', PLAY_VIMRC_PATH,  # vimgolf .vimrc
+    '-U', 'NONE',  # don't load .gvimrc
+]
 
 
 def vim(args, **run_kwargs):
@@ -13,15 +23,15 @@ def vim(args, **run_kwargs):
         raise
     except Exception:
         logger.exception('{} execution failed'.format(GOLF_VIM))
-        write('The execution of {} has failed'.format(GOLF_VIM), stream=sys.stderr, color='red')
+        write('The execution of {} has failed'.format(GOLF_VIM), err=True, fg='red')
         raise Failure()
 
 
 def _vim(args, **run_kwargs):
     vim_path = find_executable(GOLF_VIM)
     if not vim_path:
-        write('Unable to find "{}"'.format(GOLF_VIM), color='red')
-        write('Please update your PATH to include the directory with "{}"'.format(GOLF_VIM), color='red')
+        write('Unable to find "{}"'.format(GOLF_VIM), fg='red')
+        write('Please update your PATH to include the directory with "{}"'.format(GOLF_VIM), fg='red')
         raise Failure()
     vim_name = os.path.basename(os.path.realpath(vim_path))
 
@@ -37,8 +47,8 @@ def _vim(args, **run_kwargs):
     # As of 2019/3/2, on Windows, nvim-qt doesn't support --nofork.
     # Issue a warning as opposed to failing, since this may change.
     if vim_name == 'nvim-qt' and sys.platform == 'win32':
-        write('vimgolf with nvim-qt on Windows may not function properly', color='red')
-        write('If there are issues, please try using a different version of vim', color='yellow')
+        write('vimgolf with nvim-qt on Windows may not function properly', fg='red')
+        write('If there are issues, please try using a different version of vim', fg='yellow')
         if not confirm('Continue trying to play?'):
             raise Failure()
 

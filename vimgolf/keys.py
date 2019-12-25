@@ -34,14 +34,33 @@ def parse_keycodes(raw_keys):
     return keycodes
 
 
-def to_raw_keys(keycodes):
-    raw_keys = []
-    for keycode in keycodes:
-        if keycode[0] == 0:
-            raw_keys.append(keycode[1])
+def tokenize_raw_keycode_reprs(
+        raw_keycode_reprs: str,
+        literal_lt='',
+        literal_gt=''):
+    if literal_lt and literal_gt:
+        assert literal_lt != literal_gt
+    tokens = []
+    multi_in_progress = False
+    multi_keys = []
+    for raw_keycode_repr in raw_keycode_reprs:
+        if raw_keycode_repr == '<':
+            multi_in_progress = True
+            multi_keys.append(raw_keycode_repr)
+        elif raw_keycode_repr == '>':
+            multi_keys.append(raw_keycode_repr)
+            multi_in_progress = False
+            tokens.append(''.join(multi_keys))
+            multi_keys = []
+        elif multi_in_progress:
+            multi_keys.append(raw_keycode_repr)
+        elif literal_lt and raw_keycode_repr == literal_lt:
+            tokens.append('<')
+        elif literal_gt and raw_keycode_repr == literal_gt:
+            tokens.append('>')
         else:
-            raw_keys.extend([0x80, keycode[0], keycode[1]])
-    return bytes(raw_keys)
+            tokens.append(raw_keycode_repr)
+    return tokens
 
 
 # keystrokes that should not impact score (e.g., window focus)
@@ -145,7 +164,7 @@ _KEYCODE_REPR_LOOKUP.update({
     b'\xfc\x06': '<C-S->',
     b'\xfc\x08': '<A->',
     b'\xfc\x0a': '<A-S->',
-    b'\xfc\x0c': '<C-A>',
+    b'\xfc\x0c': '<C-A->',
     b'\xfc\x0e': '<C-A-S->',
     b'\xfc\x10': '<M->',
     b'\xfc\x12': '<M-S->',
@@ -153,7 +172,7 @@ _KEYCODE_REPR_LOOKUP.update({
     b'\xfc\x16': '<M-C-S->',
     b'\xfc\x18': '<M-A->',
     b'\xfc\x1a': '<M-A-S->',
-    b'\xfc\x1c': '<M-C-A>',
+    b'\xfc\x1c': '<M-C-A->',
     b'\xfc\x1e': '<M-C-A-S->',
 
     b'\xfd\x04': '<S-Up>',
@@ -218,8 +237,6 @@ _KEYCODE_REPR_LOOKUP.update({
     b'\xfd\x58': '<C-End>',
 })
 
-_KEYCODE_LOOKUP = {v: k for k, v in _KEYCODE_REPR_LOOKUP.items()}
-
 
 def get_keycode_repr(keycode):
     if keycode in _KEYCODE_REPR_LOOKUP:
@@ -231,8 +248,12 @@ def get_keycode_repr(keycode):
     return key
 
 
-def get_keycode(keycode_repr):
-    return _KEYCODE_LOOKUP[keycode_repr]
+# A naive approach for a key sequence that will save buffer content and quit
+# regardless of the current state.
+# It's certainly not robust, as edge cases can fail it,
+# but for practical vimgolf inputs, failures should be rare enough.
+REPLAY_QUIT_KEYCODE_REPRS = '<Esc><Esc><Esc>:<C-U>wqall<CR>'
+REPLAY_QUIT_TOKENS = tokenize_raw_keycode_reprs(REPLAY_QUIT_KEYCODE_REPRS)
 
 
 class Keys:
@@ -257,14 +278,4 @@ class Keys:
             raw_keys=raw_keys,
             keycodes=keycodes,
             keycode_reprs=keycode_reprs,
-        )
-
-    @classmethod
-    def from_keycode_reprs(cls, keycode_reprs):
-        keycodes = [get_keycode(keycode_repr) for keycode_repr in keycode_reprs]
-        raw_keys = to_raw_keys(keycodes)
-        return Keys(
-            raw_keys=raw_keys,
-            keycodes=keycodes,
-            keycode_reprs=keycode_reprs
         )

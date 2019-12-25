@@ -1,5 +1,3 @@
-" http://vimdoc.sourceforge.net/htmldoc/starting.html#vimrc
-
 set nocompatible        " use vim defaults
 set scrolloff=3         " keep 3 lines when scrolling
 set ai                  " set auto-indenting on for programming

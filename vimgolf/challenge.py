@@ -2,7 +2,6 @@ import datetime
 import json
 import os
 import re
-import sys
 import urllib.parse
 
 from vimgolf import (
@@ -11,7 +10,7 @@ from vimgolf import (
     GOLF_HOST,
     VIMGOLF_CHALLENGES_PATH,
 )
-from vimgolf.utils import write
+from vimgolf.utils import write, http_request, format_
 
 
 def validate_challenge_id(challenge_id):
@@ -19,8 +18,8 @@ def validate_challenge_id(challenge_id):
 
 
 def show_challenge_id_error():
-    write('Invalid challenge ID', stream=sys.stderr, color='red')
-    write('Please check the ID on vimgolf.com', stream=sys.stderr, color='red')
+    write('Invalid challenge ID', err=True, fg='red')
+    write('Please check the ID on vimgolf.com', err=True, fg='red')
 
 
 def get_id_lookup():
@@ -74,6 +73,36 @@ class Challenge:
         self.compliant = compliant
         self.api_key = api_key
 
+    def load_or_download(self):
+        if self.spec:
+            return self.load()
+        else:
+            return self.download()
+
+    def load(self):
+        self.load_from_spec(self.spec)
+        return self
+
+    def download(self):
+        url = urllib.parse.urljoin(GOLF_HOST, '/challenges/{}.json'.format(self.id))
+        response = http_request(url)
+        challenge_spec = json.loads(response.body)
+        self.save(challenge_spec)
+        return self
+
+    def load_from_spec(self, challenge_spec):
+        in_text = format_(challenge_spec['in']['data'])
+        out_text = format_(challenge_spec['out']['data'])
+        in_type = challenge_spec['in']['type']
+        out_type = challenge_spec['out']['type']
+        # Sanitize and add leading dot
+        in_extension = '.{}'.format(re.sub(r'[^\w-]', '_', in_type))
+        out_extension = '.{}'.format(re.sub(r'[^\w-]', '_', out_type))
+        self.in_text = in_text
+        self.out_text = out_text
+        self.in_extension = in_extension
+        self.out_extension = out_extension
+
     @property
     def dir(self):
         return os.path.join(VIMGOLF_CHALLENGES_PATH, self.id)
@@ -99,6 +128,7 @@ class Challenge:
         return os.path.join(self.dir, 'metadata.json')
 
     def save(self, spec):
+        self.load_from_spec(spec)
         self._ensure_dir()
         with open(self.in_path, 'w') as f:
             f.write(self.in_text)
@@ -144,11 +174,13 @@ class Challenge:
 
     def update_metadata(self, name=None, description=None):
         self._ensure_dir()
+        answers = 0
         uploaded = 0
         correct = 0
         stub_score = 10 ** 10
         best_score = stub_score
         for answer in self.answers:
+            answers += 1
             if answer['uploaded']:
                 uploaded += 1
             if answer['correct']:
@@ -160,6 +192,7 @@ class Challenge:
             'url': get_challenge_url(self.id),
             'uploaded': uploaded,
             'correct': correct,
+            'answers': answers,
             'best_score': best_score if best_score != stub_score else -1,
         })
         if name:

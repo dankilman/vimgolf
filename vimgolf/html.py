@@ -2,6 +2,8 @@ from enum import Enum
 import html.parser
 from typing import Iterable
 
+from vimgolf import Failure
+
 
 class NodeType(Enum):
     ELEMENT = 1
@@ -97,6 +99,9 @@ class HTMLParser(html.parser.HTMLParser):
             self._stack[-1].children.append(text_node)
             text_node.parent = self._stack[-1]
         self.nodes.append(text_node)
+
+    def error(self, message):
+        raise Failure()
 
 
 def parse_html(raw_html: str):

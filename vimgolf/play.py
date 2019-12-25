@@ -1,14 +1,13 @@
 import filecmp
 import json
 import os
-import sys
 import urllib.parse
 
-from vimgolf import logger, PLAY_VIMRC_PATH, GOLF_HOST
+from vimgolf import logger, GOLF_HOST
 from vimgolf.challenge import get_challenge_url
 from vimgolf.keys import Keys
 from vimgolf.utils import write, input_loop, http_request
-from vimgolf.vim import vim
+from vimgolf.vim import vim, BASE_ARGS
 
 
 def play(challenge, workspace):
@@ -24,9 +23,9 @@ def play(challenge, workspace):
     with open(outfile, 'w') as f:
         f.write(challenge.out_text)
 
-    write('Launching vimgolf session', color='yellow')
+    write('Launching vimgolf session', fg='yellow')
     main_loop(challenge, infile, logfile, outfile)
-    write('Thanks for playing!', color='green')
+    write('Thanks for playing!', fg='green')
 
 
 def main_loop(challenge, infile, logfile, outfile):
@@ -45,18 +44,18 @@ def main_loop(challenge, infile, logfile, outfile):
         correct = play_result['correct']
         score = play_result['score']
 
-        write('Here are your keystrokes:', color='green')
+        write('Here are your keystrokes:', fg='green')
         for keycode_repr in keycode_reprs:
             color = 'magenta' if len(keycode_repr) > 1 else None
-            write(keycode_repr, color=color, end=None)
-        write('')
+            write(keycode_repr, fg=color, nl=False)
+        write()
 
         if correct:
-            write('Success! Your output matches.', color='green')
-            write('Your score:', color='green')
+            write('Success! Your output matches.', fg='green')
+            write('Your score:', fg='green')
         else:
-            write('Uh oh, looks like your entry does not match the desired output.', color='red')
-            write('Your score for this failed attempt:', color='red')
+            write('Uh oh, looks like your entry does not match the desired output.', fg='red')
+            write('Your score for this failed attempt:', fg='red')
         write(score)
 
         menu_loop_result = menu_loop(
@@ -80,19 +79,10 @@ def main_loop(challenge, infile, logfile, outfile):
 
 
 def play_single(infile, logfile, outfile):
-    vimrc = PLAY_VIMRC_PATH
-    play_args = [
-        '-Z',  # restricted mode, utilities not allowed
-        '-n',  # no swap file, memory only editing
-        '--noplugin',  # no plugins
-        '-i', 'NONE',  # don't load .viminfo (e.g., has saved macros, etc.)
-        '+0',  # start on line 0
-        '-u', vimrc,  # vimgolf .vimrc
-        '-U', 'NONE',  # don't load .gvimrc
+    vim(BASE_ARGS + [
         '-W', logfile,  # keylog file (overwrites existing)
         infile,
-    ]
-    vim(play_args, check=True)
+    ], check=True)
     correct = filecmp.cmp(infile, outfile)
     with open(logfile, 'rb') as _f:
         keys = Keys.from_raw_keys(_f.read())
@@ -124,30 +114,30 @@ def menu_loop(
         menu.append(('q', 'Quit vimgolf'))
         valid_codes = [x[0] for x in menu]
         for opt in menu:
-            write('[{}] {}'.format(*opt), color='yellow')
+            write('[{}] {}'.format(*opt), fg='yellow')
         selection = input_loop('Choice> ')
         if selection not in valid_codes:
-            write('Invalid selection: {}'.format(selection), stream=sys.stderr, color='red')
+            write('Invalid selection: {}'.format(selection), err=True, fg='red')
         elif selection == 'd':
             diff_args = ['-d', '-n', infile, outfile]
             vim(diff_args)
         elif selection == 'w':
             success = upload_result(challenge.id, challenge.api_key, raw_keys)
             if success:
-                write('Uploaded entry!', color='green')
+                write('Uploaded entry!', fg='green')
                 leaderboard_url = get_challenge_url(challenge.id)
-                write('View the leaderboard: {}'.format(leaderboard_url), color='green')
+                write('View the leaderboard: {}'.format(leaderboard_url), fg='green')
                 uploaded = True
                 upload_eligible = False
             else:
-                write('The entry upload has failed', stream=sys.stderr, color='red')
+                write('The entry upload has failed', err=True, fg='red')
                 message = 'Please check your API key on vimgolf.com'
-                write(message, stream=sys.stderr, color='red')
+                write(message, err=True, fg='red')
         else:
             break
     should_quit = selection == 'q'
     if not should_quit:
-        write('Retrying vimgolf challenge', color='yellow')
+        write('Retrying vimgolf challenge', fg='yellow')
     return {
         'should_quit': should_quit,
         'uploaded': uploaded,
