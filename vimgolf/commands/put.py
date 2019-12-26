@@ -17,7 +17,7 @@ from vimgolf.play import play
 from vimgolf.utils import write, confirm
 
 
-def put(challenge_id):
+def put(challenge_id, keys):
     challenge_id = expand_challenge_id(challenge_id)
     logger.info('put(%s)', challenge_id)
 
@@ -49,7 +49,7 @@ def put(challenge_id):
         api_key=api_key
     ).load()
     with tempfile.TemporaryDirectory() as d:
-        play(challenge, d)
+        play(challenge, d, keys)
     challenge.update_metadata()
 
 

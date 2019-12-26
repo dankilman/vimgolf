@@ -46,9 +46,10 @@ def local(in_file, out_file):
 
 @command()
 @argument('challenge_id')
-def put(challenge_id):
+@option('-k', '--keys', help='Key sequence to play')
+def put(challenge_id, keys):
     """launch vimgolf.com challenge"""
-    commands.put(challenge_id)
+    commands.put(challenge_id, keys)
 
 
 @command()

@@ -10,7 +10,7 @@ from vimgolf.utils import write, input_loop, http_request
 from vimgolf.vim import vim, BASE_ARGS
 
 
-def play(challenge, workspace):
+def play(challenge, workspace, keys=None):
     logger.info('play(...)')
 
     infile = os.path.join(workspace, 'in')
@@ -31,12 +31,13 @@ def play(challenge, workspace):
         logfile=logfile,
         outfile=outfile,
         scriptfile=scriptfile,
+        initial_keys=keys,
     )
     write('Thanks for playing!', fg='green')
 
 
-def main_loop(challenge, infile, logfile, outfile, scriptfile):
-    keys = None
+def main_loop(challenge, infile, logfile, outfile, scriptfile, initial_keys):
+    keys = initial_keys
     while True:
         with open(infile, 'w') as f:
             f.write(challenge.in_text)
