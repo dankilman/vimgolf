@@ -10,7 +10,11 @@ from vimgolf.challenge import (
     validate_challenge_id,
     show_challenge_id_error,
 )
-from vimgolf.keys import tokenize_raw_keycode_reprs, REPLAY_QUIT_TOKENS, escape_tokens
+from vimgolf.keys import (
+    tokenize_raw_keycode_reprs,
+    REPLAY_QUIT,
+    KeycodeReprs,
+)
 from vimgolf.utils import write
 from vimgolf.vim import vim, BASE_ARGS
 
@@ -75,18 +79,22 @@ def build_sequences(keys, literal_gt, literal_lt):
         literal_lt=literal_lt,
         literal_gt=literal_gt,
     )
-    return [tokens[:i] for i in range(len(tokens) + 1)]
+    return [
+        KeycodeReprs(
+            ''.join(tokens[:i]),
+            literal_lt=literal_lt,
+            literal_gt=literal_gt
+        )
+        for i in range(len(tokens) + 1)
+    ]
 
 
 def replay_sequences(dst_path, script_path, sequences, src_in_path):
-    for i, tokens in enumerate(sequences):
+    for i, keycode_reprs in enumerate(sequences):
         shutil.copy(src_in_path, dst_path(i))
-        all_tokens = tokens + REPLAY_QUIT_TOKENS
-        escaped_tokens = escape_tokens(all_tokens)
-        final_keys = ''.join(escaped_tokens)
+        all_keycodes = keycode_reprs + REPLAY_QUIT
         with open(script_path(i), 'w') as f:
-            f.write('call feedkeys("{}", "t")'.format(final_keys))
-
+            f.write(all_keycodes.call_feedkeys)
         vim(BASE_ARGS + [
             '-S', script_path(i),
             dst_path(i),
@@ -121,7 +129,7 @@ def prepare_inspect_files(dst_path, in_path, in_sequences, sequences):
             if in_sequence_index == 0:
                 reprs = '(IN)'
             else:
-                reprs = ''.join(sequences[in_sequence_index])
+                reprs = sequences[in_sequence_index].joined
                 if in_sequence_index == len(sequences) - 1:
                     reprs = '{} (OUT)'.format(reprs)
             header = '{}\n----------------------\n'.format(reprs)

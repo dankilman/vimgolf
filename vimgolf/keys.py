@@ -255,12 +255,40 @@ def get_keycode_repr(keycode):
     return key
 
 
+class KeycodeReprs:
+    def __init__(self, raw_keycode_reprs, literal_lt=None, literal_gt=None):
+        self.raw_keycode_reprs = raw_keycode_reprs
+        self.literal_lt = literal_lt or ''
+        self.literal_gt = literal_gt or ''
+        self.tokens = tokenize_raw_keycode_reprs(
+            raw_keycode_reprs=raw_keycode_reprs,
+            literal_lt=literal_lt,
+            literal_gt=literal_gt,
+        )
+        self.joined = ''.join(self.tokens)
+        self.escaped = escape_tokens(self.tokens)
+        self.escaped_joined = ''.join(self.escaped)
+        self.call_feedkeys = 'call feedkeys("{}", "t")'.format(self.escaped_joined)
+
+    def __add__(self, other):
+        assert isinstance(other, KeycodeReprs)
+        other_raw = (
+            other.raw_keycode_reprs
+                 .replace(other.literal_lt, self.literal_lt)
+                 .replace(other.literal_gt, self.literal_gt)
+        )
+        return KeycodeReprs(
+            raw_keycode_reprs=self.raw_keycode_reprs + other_raw,
+            literal_lt=self.literal_lt,
+            literal_gt=self.literal_gt
+        )
+
+
 # A naive approach for a key sequence that will save buffer content and quit
 # regardless of the current state.
 # It's certainly not robust, as edge cases can fail it,
 # but for practical vimgolf inputs, failures should be rare enough.
-REPLAY_QUIT_KEYCODE_REPRS = '<Esc><Esc><Esc>:<C-U>wqall<CR>'
-REPLAY_QUIT_TOKENS = tokenize_raw_keycode_reprs(REPLAY_QUIT_KEYCODE_REPRS)
+REPLAY_QUIT = KeycodeReprs('<Esc><Esc><Esc>:<C-U>wqall<CR>')
 
 
 class Keys:

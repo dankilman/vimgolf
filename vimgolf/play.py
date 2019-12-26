@@ -5,7 +5,7 @@ import urllib.parse
 
 from vimgolf import logger, GOLF_HOST
 from vimgolf.challenge import get_challenge_url
-from vimgolf.keys import Keys, tokenize_raw_keycode_reprs, escape_tokens
+from vimgolf.keys import Keys, KeycodeReprs
 from vimgolf.utils import write, input_loop, http_request
 from vimgolf.vim import vim, BASE_ARGS
 
@@ -40,8 +40,9 @@ def main_loop(challenge, infile, logfile, outfile, scriptfile):
     while True:
         with open(infile, 'w') as f:
             f.write(challenge.in_text)
-
-        create_script_file(scriptfile=scriptfile, keys=keys)
+        with open(scriptfile, 'w') as f:
+            if keys:
+                f.write(KeycodeReprs(keys).call_feedkeys)
 
         play_result = play_single(
             infile=infile,
@@ -107,15 +108,6 @@ def play_single(infile, logfile, outfile, scriptfile):
     }
 
 
-def create_script_file(scriptfile, keys):
-    with open(scriptfile, 'w') as f:
-        if keys:
-            tokens = tokenize_raw_keycode_reprs(keys)
-            escaped = escape_tokens(tokens)
-            final_keys = ''.join(escaped)
-            f.write('call feedkeys("{}", "t")'.format(final_keys))
-
-
 def menu_loop(
         challenge,
         correct,
@@ -133,7 +125,7 @@ def menu_loop(
         if upload_eligible and correct:
             menu.append(('w', 'Upload result'))
         menu.append(('r', 'Retry the current challenge'))
-        menu.append(('k', 'Retry the current challenge with keys'))
+        menu.append(('k', 'Retry the current challenge with key sequence'))
         menu.append(('q', 'Quit vimgolf'))
         valid_codes = [x[0] for x in menu]
         for opt in menu:
