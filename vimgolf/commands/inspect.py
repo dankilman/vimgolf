@@ -10,7 +10,7 @@ from vimgolf.challenge import (
     validate_challenge_id,
     show_challenge_id_error,
 )
-from vimgolf.keys import tokenize_raw_keycode_reprs, REPLAY_QUIT_TOKENS
+from vimgolf.keys import tokenize_raw_keycode_reprs, REPLAY_QUIT_TOKENS, escape_tokens
 from vimgolf.utils import write
 from vimgolf.vim import vim, BASE_ARGS
 
@@ -82,10 +82,7 @@ def replay_sequences(dst_path, script_path, sequences, src_in_path):
     for i, tokens in enumerate(sequences):
         shutil.copy(src_in_path, dst_path(i))
         all_tokens = tokens + REPLAY_QUIT_TOKENS
-        escaped_tokens = [
-            '\\{}'.format(t) if len(t) > 1 else t
-            for t in all_tokens
-        ]
+        escaped_tokens = escape_tokens(all_tokens)
         final_keys = ''.join(escaped_tokens)
         with open(script_path(i), 'w') as f:
             f.write('call feedkeys("{}", "t")'.format(final_keys))

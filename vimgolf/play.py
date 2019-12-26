@@ -5,7 +5,7 @@ import urllib.parse
 
 from vimgolf import logger, GOLF_HOST
 from vimgolf.challenge import get_challenge_url
-from vimgolf.keys import Keys
+from vimgolf.keys import Keys, tokenize_raw_keycode_reprs, escape_tokens
 from vimgolf.utils import write, input_loop, http_request
 from vimgolf.vim import vim, BASE_ARGS
 
@@ -19,24 +19,38 @@ def play(challenge, workspace):
     outfile = os.path.join(workspace, 'out')
     if challenge.out_extension:
         outfile += challenge.out_extension
+    scriptfile = os.path.join(workspace, 'script')
     logfile = os.path.join(workspace, 'log')
     with open(outfile, 'w') as f:
         f.write(challenge.out_text)
 
     write('Launching vimgolf session', fg='yellow')
-    main_loop(challenge, infile, logfile, outfile)
+    main_loop(
+        challenge=challenge,
+        infile=infile,
+        logfile=logfile,
+        outfile=outfile,
+        scriptfile=scriptfile,
+    )
     write('Thanks for playing!', fg='green')
 
 
-def main_loop(challenge, infile, logfile, outfile):
+def main_loop(challenge, infile, logfile, outfile, scriptfile):
+    keys = None
     while True:
         with open(infile, 'w') as f:
             f.write(challenge.in_text)
+
+        create_script_file(
+            scriptfile=scriptfile,
+            keys=keys
+        )
 
         play_result = play_single(
             infile=infile,
             logfile=logfile,
             outfile=outfile,
+            scriptfile=scriptfile,
         )
 
         raw_keys = play_result['raw_keys']
@@ -65,6 +79,7 @@ def main_loop(challenge, infile, logfile, outfile):
             outfile=outfile,
             raw_keys=raw_keys
         )
+        keys = menu_loop_result['keys']
 
         if challenge.id:
             challenge.add_answer(
@@ -78,9 +93,10 @@ def main_loop(challenge, infile, logfile, outfile):
             break
 
 
-def play_single(infile, logfile, outfile):
+def play_single(infile, logfile, outfile, scriptfile):
     vim(BASE_ARGS + [
         '-W', logfile,  # keylog file (overwrites existing)
+        '-S', scriptfile,
         infile,
     ], check=True)
     correct = filecmp.cmp(infile, outfile)
@@ -92,6 +108,15 @@ def play_single(infile, logfile, outfile):
         'raw_keys': keys.raw_keys,
         'score': keys.score,
     }
+
+
+def create_script_file(scriptfile, keys):
+    with open(scriptfile, 'w') as f:
+        if keys:
+            tokens = tokenize_raw_keycode_reprs(keys)
+            escaped = escape_tokens(tokens)
+            final_keys = ''.join(escaped)
+            f.write('call feedkeys("{}", "t")'.format(final_keys))
 
 
 def menu_loop(
@@ -111,6 +136,7 @@ def menu_loop(
         if upload_eligible and correct:
             menu.append(('w', 'Upload result'))
         menu.append(('r', 'Retry the current challenge'))
+        menu.append(('k', 'Retry the current challenge with keys'))
         menu.append(('q', 'Quit vimgolf'))
         valid_codes = [x[0] for x in menu]
         for opt in menu:
@@ -136,11 +162,15 @@ def menu_loop(
         else:
             break
     should_quit = selection == 'q'
+    keys = None
     if not should_quit:
+        if selection == 'k':
+            keys = input_loop('Enter key sequence: ')
         write('Retrying vimgolf challenge', fg='yellow')
     return {
         'should_quit': should_quit,
         'uploaded': uploaded,
+        'keys': keys,
     }
 
 

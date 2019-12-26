@@ -63,6 +63,13 @@ def tokenize_raw_keycode_reprs(
     return tokens
 
 
+def escape_tokens(tokens):
+    return [
+        '\\{}'.format(t) if len(t) > 1 else t
+        for t in tokens
+    ]
+
+
 # keystrokes that should not impact score (e.g., window focus)
 IGNORED_KEYSTROKES = {
     b'\xfd\x35',  # (35) KE_IGNORE
