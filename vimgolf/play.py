@@ -41,10 +41,7 @@ def main_loop(challenge, infile, logfile, outfile, scriptfile):
         with open(infile, 'w') as f:
             f.write(challenge.in_text)
 
-        create_script_file(
-            scriptfile=scriptfile,
-            keys=keys
-        )
+        create_script_file(scriptfile=scriptfile, keys=keys)
 
         play_result = play_single(
             infile=infile,
