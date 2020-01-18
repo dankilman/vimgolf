@@ -10,7 +10,7 @@ from vimgolf.utils import write, input_loop, http_request
 from vimgolf.vim import vim, BASE_ARGS
 
 
-def play(challenge, workspace, keys=None):
+def play(challenge, workspace, keys=None, diff=False):
     logger.info('play(...)')
 
     infile = os.path.join(workspace, 'in')
@@ -32,11 +32,12 @@ def play(challenge, workspace, keys=None):
         outfile=outfile,
         scriptfile=scriptfile,
         initial_keys=keys,
+        diff=diff,
     )
     write('Thanks for playing!', fg='green')
 
 
-def main_loop(challenge, infile, logfile, outfile, scriptfile, initial_keys):
+def main_loop(challenge, infile, logfile, outfile, scriptfile, initial_keys, diff):
     keys = initial_keys
     while True:
         with open(infile, 'w') as f:
@@ -45,42 +46,49 @@ def main_loop(challenge, infile, logfile, outfile, scriptfile, initial_keys):
             if keys:
                 f.write(KeycodeReprs(keys).call_feedkeys)
 
-        play_result = play_single(
-            infile=infile,
-            logfile=logfile,
-            outfile=outfile,
-            scriptfile=scriptfile,
-        )
+        if not diff:
+            play_result = play_single(
+                infile=infile,
+                logfile=logfile,
+                outfile=outfile,
+                scriptfile=scriptfile,
+            )
 
-        raw_keys = play_result['raw_keys']
-        keycode_reprs = play_result['keycode_reprs']
-        correct = play_result['correct']
-        score = play_result['score']
+            raw_keys = play_result['raw_keys']
+            keycode_reprs = play_result['keycode_reprs']
+            correct = play_result['correct']
+            score = play_result['score']
 
-        write('Here are your keystrokes:', fg='green')
-        for keycode_repr in keycode_reprs:
-            color = 'magenta' if len(keycode_repr) > 1 else None
-            write(keycode_repr, fg=color, nl=False)
-        write()
+            write('Here are your keystrokes:', fg='green')
+            for keycode_repr in keycode_reprs:
+                color = 'magenta' if len(keycode_repr) > 1 else None
+                write(keycode_repr, fg=color, nl=False)
+            write()
 
-        if correct:
-            write('Success! Your output matches.', fg='green')
-            write('Your score:', fg='green')
+            if correct:
+                write('Success! Your output matches.', fg='green')
+                write('Your score:', fg='green')
+            else:
+                write('Uh oh, looks like your entry does not match the desired output.', fg='red')
+                write('Your score for this failed attempt:', fg='red')
+            write(score)
         else:
-            write('Uh oh, looks like your entry does not match the desired output.', fg='red')
-            write('Your score for this failed attempt:', fg='red')
-        write(score)
+            correct = False
+            raw_keys = ''
+            keycode_reprs = ''
+            score = 0
 
         menu_loop_result = menu_loop(
             challenge=challenge,
             correct=correct,
             infile=infile,
             outfile=outfile,
-            raw_keys=raw_keys
+            raw_keys=raw_keys,
+            diff=diff,
         )
         keys = menu_loop_result['keys']
 
-        if challenge.id:
+        if challenge.id and not diff:
             challenge.add_answer(
                 keys=keycode_reprs,
                 score=score,
@@ -114,8 +122,14 @@ def menu_loop(
         correct,
         infile,
         outfile,
-        raw_keys):
-    upload_eligible = challenge.id and challenge.compliant and challenge.api_key
+        raw_keys,
+        diff):
+    upload_eligible = (
+        challenge.id and
+        challenge.compliant and
+        challenge.api_key and
+        not diff
+    )
     uploaded = False
     while True:
         # Generate the menu items inside the loop since it can change across iterations
@@ -129,14 +143,20 @@ def menu_loop(
         menu.append(('k', 'Retry the current challenge with key sequence'))
         menu.append(('q', 'Quit vimgolf'))
         valid_codes = [x[0] for x in menu]
-        for opt in menu:
-            write('[{}] {}'.format(*opt), fg='yellow')
-        selection = input_loop('Choice> ')
+        if diff:
+            selection = 'd'
+        else:
+            for opt in menu:
+                write('[{}] {}'.format(*opt), fg='yellow')
+            selection = input_loop('Choice> ')
         if selection not in valid_codes:
             write('Invalid selection: {}'.format(selection), err=True, fg='red')
         elif selection == 'd':
             diff_args = ['-d', '-n', infile, outfile]
             vim(diff_args)
+            if diff:
+                selection = 'q'
+                break
         elif selection == 'w':
             success = upload_result(challenge.id, challenge.api_key, raw_keys)
             if success:

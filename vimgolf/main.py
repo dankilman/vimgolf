@@ -53,6 +53,13 @@ def put(challenge_id, keys):
 
 
 @command()
+@argument('challenge_id')
+def diff(challenge_id):
+    """diff input/output of challenge_id"""
+    commands.put(challenge_id, keys=None, diff=True)
+
+
+@command()
 @argument('spec', default='', callback=lambda _, __, value: parse_list_spec(value))
 @option('-i', '--incomplete', is_flag=True, help='Show incomplete (not submitted) items only')
 def ls(spec, incomplete):
